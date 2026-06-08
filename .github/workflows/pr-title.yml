@@ -1,42 +1,31 @@
 name: PR Title
 
-# Validates that the PR title is a Conventional Commit
-# (per .claude/rules/commit-and-pr.md). Squash-merge uses the PR title
-# as the commit subject on main, so a malformed title pollutes
-# `git log` and breaks `git log --oneline | grep feat`.
+# Validates the PR title against conventions.json via the devex CLI — the SAME
+# single source of truth the developer validates locally (no regex is hard-coded
+# here; see .claude/rules/boundaries.md §1 and magic-values.md). Squash-merge
+# uses the PR title as the commit subject on main, so it must be a valid
+# conventional-commit carrying a Work ID, exactly like a commit.
 
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
 
 permissions:
-  pull-requests: read
+  contents: read
 
 jobs:
   lint:
     name: Lint title
     runs-on: ubuntu-latest
+    # Dependabot PRs do not carry a Work ID by design — skip the gate for them.
+    if: github.actor != 'dependabot[bot]'
     steps:
-      - uses: amannn/action-semantic-pull-request@v6
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Validate PR title against conventions.json
+        # The PR title is untrusted input — pass it through an env var, never
+        # interpolated into the shell command, to avoid script injection
+        # (.claude/rules/security.md §8).
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            chore
-            refactor
-            test
-            docs
-            ci
-            perf
-            build
-            infra
-          # Allow but don't require a scope (e.g. feat(api): …).
-          requireScope: false
-          # Subject ≤ 70 chars per .claude/rules/commit-and-pr.md.
-          subjectPattern: ^.{1,70}$
-          subjectPatternError: |
-            PR title subject too long (>70 chars). Conventional-commit
-            format: <type>(<scope>): <short imperative>. See
-            .claude/rules/commit-and-pr.md.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: uv run --project packages/devex-cli devex check-pr-title "$PR_TITLE"

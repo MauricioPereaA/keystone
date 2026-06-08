@@ -34,8 +34,12 @@ def test_validate_commit_requires_work_id() -> None:
 
 
 def test_validate_pr_title() -> None:
-    assert validate_pr_title("[FIN-123] Add payment validation").ok is True
-    assert validate_pr_title("FIN-123: add payment validation").ok is True
+    # A PR title is the squash-merge commit subject, so it follows the commit shape:
+    # <type>(<scope>)?: <WORK-ID> <subject>.
+    assert validate_pr_title("feat(api): FIN-123 add payment validation").ok is True
+    assert validate_pr_title("fix: TX-19 retry on gateway timeout").ok is True
+    assert validate_pr_title("FIN-123: add payment validation").ok is False  # no conventional-commit type
+    assert validate_pr_title("feat: add payment validation").ok is False  # no Work ID
     assert validate_pr_title("Add payment validation").ok is False
 
 
@@ -54,3 +58,18 @@ def test_any_wellformed_branch_passes(work_id: str, slug: str) -> None:
 def test_commit_without_work_id_always_fails(subject: str) -> None:
     """Property: a conventional-commit subject with no Work ID never passes."""
     assert validate_commit(subject).ok is False
+
+
+commit_types = st.sampled_from(["feat", "fix", "chore", "docs", "refactor", "test", "ci", "perf", "build"])
+
+
+@given(type_=commit_types, work_id=work_ids, subject=st.from_regex(r"[a-z]+( [a-z]+){0,4}", fullmatch=True))
+def test_any_conventional_pr_title_with_work_id_passes(type_: str, work_id: str, subject: str) -> None:
+    """Property: <type>: <WORK-ID> <subject> always validates as a PR title."""
+    assert validate_pr_title(f"{type_}: {work_id} {subject}").ok is True
+
+
+@given(type_=commit_types, subject=st.from_regex(r"[a-z]+( [a-z]+){0,4}", fullmatch=True))
+def test_pr_title_without_work_id_always_fails(type_: str, subject: str) -> None:
+    """Property: a conventional-commit PR title lacking a Work ID never passes."""
+    assert validate_pr_title(f"{type_}: {subject}").ok is False
