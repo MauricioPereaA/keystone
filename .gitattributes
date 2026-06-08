@@ -1,0 +1,17 @@
+# Normalize line endings to LF in the repository on every platform.
+# Linux CI runs the Makefile (bash recipes) and the framework's shell tooling;
+# CRLF would break shebangs and `make` parsing. Storing LF everywhere keeps the
+# repo deterministic whether contributors are on Windows, macOS, or Linux.
+* text=auto eol=lf
+
+# Lockfiles are text but should never be merged by hand.
+pnpm-lock.yaml -diff
+uv.lock        -diff
+
+# Binary assets Git must not touch.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary

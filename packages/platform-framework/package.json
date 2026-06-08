@@ -1,0 +1,39 @@
+{
+  "name": "@keystone/platform",
+  "version": "0.1.0",
+  "description": "Keystone platform framework — reusable CDK constructs, type-safe GitHub Actions workflow generators, and the DORA telemetry contract.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./constructs": "./dist/constructs/index.js",
+    "./workflows": "./dist/workflows/index.js",
+    "./telemetry": "./dist/telemetry/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "generate:workflows": "tsx src/workflows/generate.ts"
+  },
+  "dependencies": {
+    "github-actions-workflow-ts": "^1.2.3"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.150.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "aws-cdk-lib": "^2.150.0",
+    "constructs": "^10.3.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "./conventions.schema.json",
+  "version": "0.1.0",
+  "description": "Single source of truth for Keystone engineering conventions. Consumed by the devex CLI (Python) for local validation AND by @keystone/platform (TypeScript) to generate CI workflows. One definition, zero drift between local and CI.",
+  "workId": {
+    "pattern": "^[A-Z]{2,5}-\\d+$",
+    "examples": ["FIN-123", "PLAT-7", "TX-2048"],
+    "description": "Mandatory Work ID linking every change to a tracked unit of work. Required in branch names, commit messages, and PR titles. It is the 'why' link for the audit trail."
+  },
+  "branch": {
+    "pattern": "^(feature|fix|chore|docs|refactor|test|ci|perf|build)/[A-Z]{2,5}-\\d+-[a-z0-9]+(-[a-z0-9]+)*$",
+    "examples": ["feature/FIN-123-add-payment-validation", "fix/TX-19-retry-timeout"],
+    "protected": ["main"],
+    "description": "type/<WORK-ID>-<kebab-slug>. The type prefix mirrors conventional-commit types."
+  },
+  "commit": {
+    "pattern": "^(feat|fix|chore|docs|refactor|test|ci|perf|build)(\\([a-z0-9-]+\\))?: [A-Z]{2,5}-\\d+[: ].+",
+    "examples": ["feat(api): FIN-123 add payment validation", "fix: TX-19: retry on gateway timeout"],
+    "subjectMaxLength": 72,
+    "description": "Conventional-commit type + scope, with the Work ID embedded in the subject."
+  },
+  "pullRequest": {
+    "titlePattern": "^\\[[A-Z]{2,5}-\\d+\\]\\s+.+|^[A-Z]{2,5}-\\d+:\\s+.+",
+    "examples": ["[FIN-123] Add payment validation", "FIN-123: add payment validation"],
+    "minReviewers": 2,
+    "requireTemplate": true,
+    "description": "Work ID required in the title. Two-reviewer approval rule enforced by branch protection + generated workflow."
+  },
+  "pipelines": {
+    "prPipeline": {
+      "triggers": ["pull_request.opened", "pull_request.synchronize"],
+      "stages": ["small-tests", "deploy-sandbox"],
+      "smallTests": ["unit", "property-based", "api-contract"]
+    },
+    "integrationPipeline": {
+      "triggers": ["push.main"],
+      "stages": ["small-tests", "deploy-staging", "deploy-production", "emit-metrics"]
+    },
+    "environments": ["sandbox", "staging", "production"]
+  },
+  "telemetry": {
+    "schemaVersion": "1.0.0",
+    "events": ["deployment.started", "deployment.succeeded", "deployment.failed", "deployment.rolled_back"],
+    "doraMetrics": ["deployment_frequency", "lead_time_for_changes", "change_failure_rate", "mttr"],
+    "requiredFields": ["event", "work_id", "actor", "repo", "env", "commit_sha", "commit_time", "timestamp"],
+    "description": "Language-agnostic event contract. Because @keystone/platform generates the workflows, every team emits this identical shape regardless of app language (Python, Go, Clojure, TypeScript). This is what makes DORA metrics comparable."
+  }
+}

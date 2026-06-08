@@ -1,0 +1,42 @@
+name: PR Title
+
+# Validates that the PR title is a Conventional Commit
+# (per .claude/rules/commit-and-pr.md). Squash-merge uses the PR title
+# as the commit subject on main, so a malformed title pollutes
+# `git log` and breaks `git log --oneline | grep feat`.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    name: Lint title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            refactor
+            test
+            docs
+            ci
+            perf
+            build
+            infra
+          # Allow but don't require a scope (e.g. feat(api): …).
+          requireScope: false
+          # Subject ≤ 70 chars per .claude/rules/commit-and-pr.md.
+          subjectPattern: ^.{1,70}$
+          subjectPatternError: |
+            PR title subject too long (>70 chars). Conventional-commit
+            format: <type>(<scope>): <short imperative>. See
+            .claude/rules/commit-and-pr.md.

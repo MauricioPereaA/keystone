@@ -1,0 +1,66 @@
+default_language_version:
+  python: python3.12
+
+# Hooks run on every `git commit`. Fail-fast: if something auto-fixes, the commit
+# aborts, the dev restages, and creates a new commit (keeps formatting and logic
+# changes separate). Never bypass with --no-verify (.claude/rules/no-direct-push-to-main.md).
+#
+# Inventory:
+#   - Generic hygiene  : whitespace, yaml/json, large files, private-key detection
+#   - CLI (Python)     : ruff lint + ruff-format, scoped to packages/devex-cli
+#   - Framework (TS)   : tsc --noEmit (whole-program typecheck)
+#   - CI workflows     : actionlint
+#   - Custom           : conventions drift (bundled CLI copy vs canonical)
+
+repos:
+  # -- Generic hygiene --------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  # -- CLI: Ruff (lint + format), scoped to the Python package ----------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.10.0
+    hooks:
+      - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+        files: ^packages/devex-cli/
+      - id: ruff-format
+        files: ^packages/devex-cli/
+
+  # -- CI workflows -----------------------------------------------------
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+        files: ^\.github/workflows/.*\.ya?ml$
+
+  # -- Local hooks ------------------------------------------------------
+  - repo: local
+    hooks:
+      # Framework TypeScript - whole-program typecheck (per-file isn't reliable).
+      - id: tsc
+        name: tsc --noEmit (framework)
+        language: system
+        entry: bash -c 'cd packages/platform-framework && pnpm exec tsc --noEmit'
+        files: ^packages/platform-framework/.*\.ts$
+        pass_filenames: false
+
+      # Single source of truth: the CLI's bundled conventions copy must match the
+      # canonical file. Drift here is the #1 cause of "passes local, fails CI".
+      - id: conventions-in-sync
+        name: conventions.json in sync (canonical vs CLI bundled copy)
+        language: system
+        entry: bash -c 'diff -q conventions/conventions.json packages/devex-cli/src/devex/_data/conventions.json'
+        files: ^(conventions/conventions\.json|packages/devex-cli/src/devex/_data/conventions\.json)$
+        pass_filenames: false

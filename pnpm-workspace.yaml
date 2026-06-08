@@ -1,0 +1,9 @@
+packages:
+  - "packages/platform-framework"
+
+# esbuild (a transitive dep of vitest + tsx) ships its native binary via a build
+# script. pnpm v10+ requires explicit opt-in before running dependency build
+# scripts. Allow esbuild so vitest/tsx can transform TypeScript; keep this list
+# minimal — only trusted, build-required packages belong here.
+allowBuilds:
+  esbuild: true

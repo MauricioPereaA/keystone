@@ -1,0 +1,55 @@
+# Dependabot — version updates for the Keystone monorepo.
+# Grouped minor+patch (low noise); majors individual; security updates always land.
+# Conventional-commit prefixes per .claude/rules/commit-and-pr.md.
+
+version: 2
+
+updates:
+  # ── CLI (Python / uv)
+  - package-ecosystem: "uv"
+    directory: "/packages/devex-cli"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "UTC" }
+    open-pull-requests-limit: 5
+    commit-message: { prefix: "chore(deps)", prefix-development: "chore(deps-dev)", include: "scope" }
+    labels: ["dependencies", "cli"]
+    groups:
+      cli-minor-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+      cli-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  # ── Framework (TypeScript / npm-compatible, pnpm workspace)
+  - package-ecosystem: "npm"
+    directory: "/packages/platform-framework"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "UTC" }
+    open-pull-requests-limit: 5
+    commit-message: { prefix: "chore(deps)", prefix-development: "chore(deps-dev)", include: "scope" }
+    labels: ["dependencies", "framework"]
+    groups:
+      framework-minor-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+      framework-types:
+        applies-to: version-updates
+        patterns: ["@types/*"]
+      framework-security:
+        applies-to: security-updates
+        patterns: ["*"]
+    ignore:
+      # aws-cdk-lib majors need a deliberate migration PR.
+      - dependency-name: "aws-cdk-lib"
+        update-types: ["version-update:semver-major"]
+
+  # ── GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "UTC" }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "chore(ci)", include: "scope" }
+    labels: ["dependencies", "ci"]
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ["*"]
