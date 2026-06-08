@@ -20,14 +20,15 @@
     "generate:workflows": "tsx src/workflows/generate.ts"
   },
   "dependencies": {
-    "@github-actions-workflow-ts/lib": "^2.5.0"
+    "@github-actions-workflow-ts/lib": "^2.5.0",
+    "yaml": "^2.4.0"
   },
   "peerDependencies": {
     "aws-cdk-lib": "^2.150.0",
     "constructs": "^10.3.0"
   },
   "devDependencies": {
-    "@github-actions-workflow-ts/cli": "^2.5.0",
+    "@types/node": "^20.14.0",
     "aws-cdk-lib": "^2.150.0",
     "cdk-nag": "^2.28.0",
     "constructs": "^10.3.0",
