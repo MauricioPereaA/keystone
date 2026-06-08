@@ -20,11 +20,11 @@
     "description": "Conventional-commit type + scope, with the Work ID embedded in the subject."
   },
   "pullRequest": {
-    "titlePattern": "^\\[[A-Z]{2,5}-\\d+\\]\\s+.+|^[A-Z]{2,5}-\\d+:\\s+.+",
-    "examples": ["[FIN-123] Add payment validation", "FIN-123: add payment validation"],
+    "titlePattern": "^(feat|fix|chore|docs|refactor|test|ci|perf|build)(\\([a-z0-9-]+\\))?: [A-Z]{2,5}-\\d+[: ].+",
+    "examples": ["feat(api): FIN-123 add payment validation", "fix: TX-19 retry on gateway timeout"],
     "minReviewers": 2,
     "requireTemplate": true,
-    "description": "Work ID required in the title. Two-reviewer approval rule enforced by branch protection + generated workflow."
+    "description": "PR title uses the SAME shape as a commit subject (conventional-commit type + Work ID): squash/merge stamps the title onto main, so one Work-ID-anchored convention spans branch, commit, and PR. Two-reviewer approval is enforced by branch protection (ADR-0003)."
   },
   "pipelines": {
     "prPipeline": {

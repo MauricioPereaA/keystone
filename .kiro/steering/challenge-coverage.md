@@ -58,8 +58,8 @@
 |---|---|---|
 | Universal Work ID (branch / commit / PR) | `conventions/conventions.json`, `validators.py` | ✅ |
 | Standardized PR template | `.github/pull_request_template.md` | ✅ |
-| Two-reviewer approval rule | `conventions.json` `pullRequest.minReviewers`, `commit-and-pr.md`, branch protection (GH setting) | 🟡 (doc ✅; enable branch protection on the repo) |
-| Convention enforcement via automation | local hooks + `pr-title.yml` + generated PR workflow | 🟡 |
+| Two-reviewer approval rule | `conventions.json` `pullRequest.minReviewers`, `commit-and-pr.md`, ruleset-as-code (`.github/rulesets/main-protection.json` + `scripts/apply-branch-protection.sh` + `make protect-main`), ADR-0003 | 🟡 (doc + ruleset-as-code ✅; server-side enforcement pending public/Pro — GitHub gates it on private free) |
+| Convention enforcement via automation | `pr-title.yml` delegates to `devex check-pr-title` (single source of truth, no hard-coded regex) + local hooks + generated PR workflow | 🟡 (PR-title ✅; CI drift-check + dogfood test workflows pending Phase 3) |
 
 ## 6. CI/CD Framework Design
 

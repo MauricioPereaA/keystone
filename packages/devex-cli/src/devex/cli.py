@@ -8,12 +8,23 @@ place — implement against .kiro/specs/devex-cli/tasks.md.
 from __future__ import annotations
 
 import subprocess
+import sys
 
 import typer
 from rich.console import Console
 
 from devex import __version__
-from devex.validators import validate_branch, validate_commit
+from devex.validators import validate_branch, validate_commit, validate_pr_title
+
+# Ensure UTF-8 output so Rich status glyphs (✓ / ✗) render on legacy Windows
+# consoles, where the default cp1252 codec raises UnicodeEncodeError. No-op when
+# stdout is already UTF-8 or the stream is not reconfigurable (e.g. test capture).
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        except (ValueError, OSError):
+            pass
 
 app = typer.Typer(help="Keystone devex — the developer interface to the platform.", no_args_is_help=True)
 console = Console()
@@ -39,6 +50,19 @@ def standards_check() -> None:
     for r in checks:
         console.print(("[green]✓[/] " if r.ok else "[red]✗[/] ") + r.message)
     if not all(r.ok for r in checks):
+        raise typer.Exit(code=1)
+
+
+@app.command(name="check-pr-title")
+def check_pr_title(title: str = typer.Argument(..., help="The pull-request title to validate.")) -> None:
+    """Validate a PR title against conventions.json (conventional-commit type + Work ID).
+
+    Used by CI (.github/workflows/pr-title.yml) so the PR-title rule comes from the
+    single source of truth — the same conventions the developer validates locally.
+    """
+    r = validate_pr_title(title)
+    console.print(("[green]✓[/] " if r.ok else "[red]✗[/] ") + r.message)
+    if not r.ok:
         raise typer.Exit(code=1)
 
 

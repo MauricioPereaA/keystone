@@ -12,6 +12,7 @@ Every non-obvious technical fork is captured as an ADR before — or alongside �
 |---|---|---|---|
 | [0001](./0001-monorepo-topology-and-self-contained-cli.md) | Monorepo topology with a self-contained CLI | Accepted | Why one repo + why the CLI bundles conventions (reliable Git install) |
 | [0002](./0002-language-agnostic-dora-event-source.md) | Language-agnostic DORA event as the single metric source | Accepted | Why metrics come from the pipeline event, not per-language instrumentation |
+| [0003](./0003-git-governance-and-branch-protection.md) | Git governance — unified PR-title convention + branch-protection ruleset | Accepted | One Work-ID-anchored title rule (CLI-validated); ruleset-as-code for 2 reviewers |
 
 > Add one row per ADR when it's created. Keep it sorted by number. The `/prd` skill updates this table when it scaffolds a paired ADR.
 
