@@ -75,6 +75,11 @@ lint-framework: ## tsc --noEmit (TypeScript)
 build: ## Build the framework (dist/) — the CLI builds at install time
 	cd $(FRAMEWORK_DIR) && pnpm build
 
+# ───── Governance ─────────────────────────────────────────────────────
+.PHONY: protect-main
+protect-main: ## Apply the main-branch ruleset (PR + 2 reviewers); needs a public repo or GitHub Pro
+	bash scripts/apply-branch-protection.sh
+
 # ───── Utilities ──────────────────────────────────────────────────────
 .PHONY: clean
 clean: ## Remove generated artifacts
