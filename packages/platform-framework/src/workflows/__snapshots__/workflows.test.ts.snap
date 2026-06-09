@@ -28,10 +28,12 @@ jobs:
       - name: Validate conventions & resolve Work ID (devex)
         id: standards
         run: |-
+          set -euo pipefail
           uvx --from "git+https://github.com/MauricioPereaA/keystone#subdirectory=packages/devex-cli" devex standards-check
           echo "work_id=$(uvx --from "git+https://github.com/MauricioPereaA/keystone#subdirectory=packages/devex-cli" devex workid)" >> "$GITHUB_OUTPUT"
       - name: Install dependencies
         run: |-
+          set -euo pipefail
           if [ -f pyproject.toml ]; then
             uv sync --extra dev
           else
@@ -71,6 +73,7 @@ jobs:
           aws-region: \${{ vars.AWS_REGION }}
       - name: Emit DORA telemetry (deployment.started)
         run: |-
+          set -euo pipefail
           jq -nc \\
             --arg schemaVersion "1.0.0" \\
             --arg event "deployment.started" \\
@@ -90,6 +93,7 @@ jobs:
       - name: Emit DORA telemetry (deployment.succeeded)
         if: success()
         run: |-
+          set -euo pipefail
           jq -nc \\
             --arg schemaVersion "1.0.0" \\
             --arg event "deployment.succeeded" \\
@@ -106,6 +110,7 @@ jobs:
       - name: Emit DORA telemetry (deployment.failed)
         if: failure()
         run: |-
+          set -euo pipefail
           jq -nc \\
             --arg schemaVersion "1.0.0" \\
             --arg event "deployment.failed" \\

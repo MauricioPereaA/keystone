@@ -35,6 +35,7 @@ export const LANGUAGE_TOOLCHAINS: Record<Language, Toolchain> = {
       new Step({
         name: "Install dependencies",
         run: [
+          "set -euo pipefail",
           "if [ -f pyproject.toml ]; then",
           "  uv sync --extra dev",
           "else",

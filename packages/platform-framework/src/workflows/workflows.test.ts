@@ -59,6 +59,11 @@ describe("PR pipeline generator", () => {
     expect(yaml).toContain("requirements.txt"); // pip path (uv pip install)
   });
 
+  it("generated multi-line shell steps are explicitly fail-fast (set -euo pipefail)", () => {
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
+    expect(yaml).toContain("set -euo pipefail");
+  });
+
   it("matches the serialized YAML snapshot", () => {
     expect(workflowToYaml(generatePrPipeline({ repo: "acme/svc", language: "python" }))).toMatchSnapshot();
   });
