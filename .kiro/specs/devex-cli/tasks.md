@@ -7,7 +7,7 @@
 - [x] 3. `validators.py`: `validate_branch` / `validate_commit` / `validate_pr_title`. (R1)
 - [x] 4. `standards-check` command wired to validators with Rich output + exit codes. (R1)
 - [x] 5. Tests: unit (table-driven) + property-based (Hypothesis). (NFR)
-- [ ] 6. `make sync-conventions` + CI drift check (canonical file vs bundled copy). (R6)
+- [x] 6. `make sync-conventions` + CI drift check (canonical vs bundled copy) — `.github/workflows/ci.yml` "Conventions in sync" job. (R6)
 - [x] 7. `init <service>`: scaffold service + PR template + call `@keystone/platform` workflow generator (shell-out + fallback). (R2)
 - [x] 8. `adopt` mode for existing repos (Transactionify case study) — never overwrites app code. (R2)
 - [x] 9. `pr` command: enforce Work ID in title (from the last commit), apply template, open PR via `gh` (`--dry-run` for safety). (R3)

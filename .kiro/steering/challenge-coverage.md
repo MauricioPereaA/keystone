@@ -59,7 +59,7 @@
 | Universal Work ID (branch / commit / PR) | `conventions/conventions.json`, `validators.py` | ✅ |
 | Standardized PR template | `.github/pull_request_template.md` | ✅ |
 | Two-reviewer approval rule | `conventions.json` `pullRequest.minReviewers`, `commit-and-pr.md`, ruleset-as-code (`.github/rulesets/main-protection.json` + `scripts/apply-branch-protection.sh` + `make protect-main`), ADR-0003 | 🟡 (doc + ruleset-as-code ✅; server-side enforcement pending public/Pro — GitHub gates it on private free) |
-| Convention enforcement via automation | `pr-title.yml` delegates to `devex check-pr-title` (single source of truth, no hard-coded regex) + local hooks + generated PR workflow | 🟡 (PR-title ✅; CI drift-check + dogfood test workflows pending Phase 3) |
+| Convention enforcement via automation | `pr-title.yml` (→ `devex check-pr-title`) + `ci.yml` (CLI/Framework tests + conventions drift) + local hooks + generated PR workflow | ✅ |
 
 ## 6. CI/CD Framework Design
 
@@ -95,7 +95,7 @@
 | Consistency (DORA comparable across 4 languages) | metric derived from one framework-emitted event, not per-language | ADR-0002, `audit-logging.md`, `/new-language` |
 | Convention over Configuration | golden path is the generated default; `devex init` + framework generators | `boundaries.md` §4, README |
 | Packaging Maturity | two independently versioned, Git-installable packages | `releasing.md`, both `README.md` |
-| Feedback Loops | shift-left: local `standards-check` + hooks with the same rules as CI | `logging`/`testing` rules, `/preflight` |
+| Feedback Loops | shift-left: local `standards-check` + `devex hooks install` run the SAME `conventions.json` the dogfooded `ci.yml` enforces | `ci.yml`, `devex hooks`, `/preflight` |
 | Inner-Source Readiness | contribution guide + `/new-language` (self-serve, contracts-only review) | `docs/contributing.md` |
 
 ## 10. Interview Readiness (post-submission)
