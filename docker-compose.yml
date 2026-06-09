@@ -13,7 +13,8 @@ services:
       - "4566:4566" # LocalStack edge gateway — all AWS services on one port
     environment:
       # Only the services the GoldenService construct + CDK actually use.
-      - SERVICES=lambda,apigateway,logs,s3,iam,sts,cloudformation,cloudwatch
+      # ssm holds the CDK bootstrap-version parameter (`cdklocal bootstrap`).
+      - SERVICES=lambda,apigateway,logs,s3,iam,sts,cloudformation,cloudwatch,ssm
       - DEBUG=0
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./.localstack}:/var/lib/localstack"
