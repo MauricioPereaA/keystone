@@ -7,7 +7,7 @@ name: keystone-local
 
 services:
   localstack:
-    image: localstack/localstack:latest # pin a version (e.g. :4.0) for reproducible runs
+    image: localstack/localstack:4.4.0 # last token-free community image (LocalStack required an auth token from 2026.03+)
     container_name: keystone-localstack
     ports:
       - "4566:4566" # LocalStack edge gateway — all AWS services on one port

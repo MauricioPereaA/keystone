@@ -74,7 +74,11 @@ make localstack-down         # docker compose down -v  (removes the volume)
 
 ## Notes
 
-- Pin the LocalStack image to a specific version in `docker-compose.yml` for
-  reproducible CI; `:latest` is fine for local exploration.
+- The image is pinned to `localstack/localstack:4.4.0` — the last Community
+  (token-free) image. LocalStack began requiring a `LOCALSTACK_AUTH_TOKEN` for
+  images released from 2026.03 onward (the Community free tier ended 2026-03-23);
+  `:latest` now exits with code 55 without one. Pinning 4.4.0 keeps this offline
+  demo $0 and account-free. Bump the pin only to another token-free tag, or once
+  a token is provisioned in CI as a Secret.
 - The Lambda runtime is `nodejs22.x`/`nodejs24.x` or `python3.12` — all available
   in LocalStack's Lambda emulation.
