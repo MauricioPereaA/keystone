@@ -84,7 +84,7 @@
 |---|---|---|
 | A — Local dev env (Docker Compose / LocalStack / Testcontainers) | `docker-compose.yml` (LocalStack) + `make localstack-up/down` + `docs/runbooks/local-dev-env.md` | ✅ |
 | B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅ + `devex hooks install` (native pre-commit/pre-push) | ✅ |
-| C — AI-assisted PR reviews (Amazon Q) | — | ⬜ |
+| C — AI-assisted PR reviews (Amazon Q) | `.amazonq/rules/*.md` (mapped from `.claude/rules/`) + `docs/runbooks/amazon-q-reviews.md` | 🟡 config + docs ✅; GitHub App install is the owner's one-click step |
 | D — Integration Pipeline PoC (working impl) | `…/workflows/generateIntegrationPipeline` (+ snapshot/structure tests) | 🟡 generator ✅; live end-to-end run pending |
 | E — Kiro evidence (steering · specs · AI context) | `.kiro/steering/`, `.kiro/specs/` | ✅ |
 
