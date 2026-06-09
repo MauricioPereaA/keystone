@@ -47,10 +47,16 @@ describe("PR pipeline generator", () => {
   });
 
   it("selects the toolchain per language behind one interface", () => {
-    expect(workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }))).toContain("uv run pytest");
+    expect(workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }))).toContain("uv run --no-project pytest");
     expect(workflowToYaml(generatePrPipeline({ repo: "x", language: "typescript" }))).toContain("pnpm test");
     expect(workflowToYaml(generatePrPipeline({ repo: "x", language: "go" }))).toContain("go test");
     expect(workflowToYaml(generatePrPipeline({ repo: "x", language: "clojure" }))).toContain("lein test");
+  });
+
+  it("python toolchain adopts both uv-native (pyproject) and pip (requirements.txt) services", () => {
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
+    expect(yaml).toContain("uv sync --extra dev"); // pyproject path
+    expect(yaml).toContain("requirements.txt"); // pip path (uv pip install)
   });
 
   it("matches the serialized YAML snapshot", () => {
