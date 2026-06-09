@@ -1,0 +1,64 @@
+name: CI
+
+# Keystone dogfoods its own quality gates: the same checks a developer runs
+# locally (ruff + pytest, tsc + vitest + build, conventions drift) run here on
+# every PR and on main. These job names are the required status checks in
+# .github/rulesets/main-protection.json (see ADR-0003).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  cli-tests:
+    name: CLI tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/devex-cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install dev dependencies
+        run: uv sync --extra dev
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Test (pytest + coverage floor 80%)
+        run: uv run pytest --cov=devex --cov-fail-under=80 -q
+
+  framework-tests:
+    name: Framework tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24 is the current Active LTS (and matches the local dev runtime);
+          # pnpm 11.5.2 requires Node >= 22.13. This is the repo's own CI runtime —
+          # the deployed Lambda runtime is chosen separately (AWS-supported tiers).
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm --dir packages/platform-framework lint
+      - name: Test (vitest)
+        run: pnpm --dir packages/platform-framework test
+      - name: Build (dist + .d.ts)
+        run: pnpm --dir packages/platform-framework build
+
+  conventions:
+    name: Conventions in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check conventions drift (canonical vs CLI bundled copy)
+        run: make check-conventions
