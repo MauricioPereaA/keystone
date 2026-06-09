@@ -28,14 +28,32 @@ export interface Toolchain {
 export const LANGUAGE_TOOLCHAINS: Record<Language, Toolchain> = {
   python: {
     label: "Python",
-    // uv is already set up by the job's devex (conventions gate) step, so we only
-    // install dependencies here — no duplicate setup-uv.
-    setup: () => [new Step({ name: "Install dependencies", run: "uv sync --extra dev" })],
+    // uv is already set up by the job's devex (conventions gate) step. uv is a
+    // drop-in for pip, so the golden path adopts both uv-native (pyproject.toml)
+    // AND pip-based (requirements.txt) services without forcing a migration.
+    setup: () => [
+      new Step({
+        name: "Install dependencies",
+        run: [
+          "set -euo pipefail",
+          "if [ -f pyproject.toml ]; then",
+          "  uv sync --extra dev",
+          "else",
+          "  uv venv",
+          "  # uv pip install auto-targets the .venv just created — no activation needed (uv != pip).",
+          "  for req in requirements.txt requirements-dev.txt; do",
+          '    [ -f "$req" ] && uv pip install -r "$req"',
+          "  done",
+          "fi",
+        ].join("\n"),
+      }),
+    ],
+    // --no-project so the same command works for the uv-native and the pip venv.
     smallTests: () => [
-      new Step({ name: "Unit + property-based tests", run: "uv run pytest -q" }),
+      new Step({ name: "Unit + property-based tests", run: "uv run --no-project pytest -q" }),
       // schemathesis generates API-contract cases from the OpenAPI schema and
       // pairs with Hypothesis (see .claude/rules/testing-conventions.md).
-      new Step({ name: "API contract tests", run: "uv run schemathesis run --checks all openapi.json" }),
+      new Step({ name: "API contract tests", run: "uv run --no-project schemathesis run --checks all openapi.json" }),
     ],
   },
   typescript: {

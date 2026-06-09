@@ -28,14 +28,25 @@ jobs:
       - name: Validate conventions & resolve Work ID (devex)
         id: standards
         run: |-
+          set -euo pipefail
           uvx --from "git+https://github.com/MauricioPereaA/keystone#subdirectory=packages/devex-cli" devex standards-check
           echo "work_id=$(uvx --from "git+https://github.com/MauricioPereaA/keystone#subdirectory=packages/devex-cli" devex workid)" >> "$GITHUB_OUTPUT"
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: |-
+          set -euo pipefail
+          if [ -f pyproject.toml ]; then
+            uv sync --extra dev
+          else
+            uv venv
+            # uv pip install auto-targets the .venv just created — no activation needed (uv != pip).
+            for req in requirements.txt requirements-dev.txt; do
+              [ -f "$req" ] && uv pip install -r "$req"
+            done
+          fi
       - name: Unit + property-based tests
-        run: uv run pytest -q
+        run: uv run --no-project pytest -q
       - name: API contract tests
-        run: uv run schemathesis run --checks all openapi.json
+        run: uv run --no-project schemathesis run --checks all openapi.json
   deploy-sandbox:
     runs-on: ubuntu-latest
     environment: sandbox
@@ -63,6 +74,7 @@ jobs:
           aws-region: \${{ vars.AWS_REGION }}
       - name: Emit DORA telemetry (deployment.started)
         run: |-
+          set -euo pipefail
           jq -nc \\
             --arg schemaVersion "1.0.0" \\
             --arg event "deployment.started" \\
@@ -82,6 +94,7 @@ jobs:
       - name: Emit DORA telemetry (deployment.succeeded)
         if: success()
         run: |-
+          set -euo pipefail
           jq -nc \\
             --arg schemaVersion "1.0.0" \\
             --arg event "deployment.succeeded" \\
@@ -98,6 +111,7 @@ jobs:
       - name: Emit DORA telemetry (deployment.failed)
         if: failure()
         run: |-
+          set -euo pipefail
           jq -nc \\
             --arg schemaVersion "1.0.0" \\
             --arg event "deployment.failed" \\

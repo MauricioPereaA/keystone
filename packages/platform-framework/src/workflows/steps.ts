@@ -36,6 +36,7 @@ export function standardsCheckStep(): Step {
     name: "Validate conventions & resolve Work ID (devex)",
     id: "standards",
     run: [
+      "set -euo pipefail",
       `uvx --from "${DEVEX_SPEC}" devex standards-check`,
       `echo "work_id=$(uvx --from "${DEVEX_SPEC}" devex workid)" >> "$GITHUB_OUTPUT"`,
     ].join("\n"),
@@ -97,6 +98,7 @@ export function emitTelemetryStep(input: {
     "github.event.head_commit.timestamp || github.event.pull_request.updated_at",
   );
   const run = [
+    "set -euo pipefail",
     "jq -nc \\",
     `  --arg schemaVersion "${SCHEMA_VERSION}" \\`,
     `  --arg event "${input.event}" \\`,
