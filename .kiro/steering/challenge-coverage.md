@@ -12,12 +12,13 @@
 
 The **core + bonuses are built, tested, and dogfooded**:
 
-- **CLI** (`devex`): `standards-check`, `check-pr-title`, `workid`, `init`, `adopt`, `pr`, `hooks install`, `pipeline run --local`, `dora` — 71 tests, 88% coverage.
-- **Framework** (`@keystone/platform`): telemetry contract, type-safe PR + Integration workflow generators (Option B), `GoldenService` CDK construct (Option A, cdk-nag clean) — 22 tests, `tsc` + build clean.
+- **CLI** (`devex`): `standards-check`, `check-pr-title`, `workid`, `init`, `adopt`, `pr`, `hooks install`, `pipeline run --local`, `dora` — 84 tests, 87% coverage.
+- **Framework** (`@keystone/platform`): telemetry contract, type-safe PR + Integration workflow generators (Option B), `GoldenService` CDK construct (Option A, cdk-nag clean) — 30 tests, `tsc` + build clean.
 - **Governance / CI**: single `conventions.json`; dogfooded `ci.yml` (CLI tests + framework tests + conventions drift) + `pr-title.yml`; two-reviewer ruleset-as-code (ADR-0003).
 - **Bonuses**: A (LocalStack dev env) ✅ · B (git hooks) ✅ · C (Amazon Q reviews, live against `.amazonq/rules`) ✅ · D (Integration Pipeline generator) ✅.
+- **Dogfooded on a real service**: Transactionify adopted the golden path; its live pipeline caught 6 latent bugs and the adoption surfaced 5 platform gaps, all fixed by inner-source PRs (FIN-308/309/311/312-313/314). See [`docs/case-study-transactionify.md`](../../docs/case-study-transactionify.md).
 
-**Pending = the validation phase (⏸️):** clean-machine install check, a live AWS sandbox deploy emitting a real `DoraEvent`, and the Transactionify adoption case study — plus the ADR PDF render. These need a real AWS account / the reference service; the platform itself is complete.
+**Pending = the deploy/validation phase (⏸️):** a live AWS sandbox deploy emitting a real `DoraEvent` (which also turns transactionify#1's `deploy-sandbox` green and runs post-deploy schemathesis fuzzing) and a clean-machine install check — plus the ADR PDF render. These need a real AWS account; the platform itself and its first real adoption are complete.
 
 ---
 
@@ -116,7 +117,7 @@ The **core + bonuses are built, tested, and dogfooded**:
 | Architecture deep dive | thesis "standardize the source, not the metric"; CLI↔framework via `conventions.json`; ADRs | ✅ ready |
 | Live demo | `init` → bad branch fails `standards-check` → fix → push → workflow → `devex dora` | 🟡 all commands implemented; live end-to-end run pending |
 | Installation walkthrough | `uv tool install …#subdirectory=` + `pnpm add …#path:` (test on clean machine) | 🟡 verify after push |
-| Integration case study (Transactionify fork) | fork → `pnpm add @keystone/platform` → `devex adopt` → telemetry | ⬜ prepare before interview |
+| Integration case study (Transactionify fork) | [`docs/case-study-transactionify.md`](../../docs/case-study-transactionify.md): fork → `devex adopt` → generated CI ran live; surfaced 5 platform gaps (FIN-308/309/311/312-313/314, all fixed) and caught 6 latent bugs (red→green on transactionify#1) | 🟡 adoption + small-tests done & evidenced; deploy stage pending the AWS phase |
 
 ---
 
