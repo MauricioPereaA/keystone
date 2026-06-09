@@ -63,3 +63,32 @@ def test_dora_reports_metrics_from_a_stream(tmp_path) -> None:
     result = runner.invoke(app, ["dora", "--stream", str(stream)])
     assert result.exit_code == 0
     assert "DORA metrics" in result.stdout
+
+
+def test_init_scaffolds_into_a_subdir(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init", "transactionify", "--language", "python"])
+    assert result.exit_code == 0
+    assert (tmp_path / "transactionify" / "keystone.json").exists()
+    assert (tmp_path / "transactionify" / ".github" / "pull_request_template.md").exists()
+
+
+def test_init_rejects_bad_service_name(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init", "BadName"])
+    assert result.exit_code == 2
+
+
+def test_init_rejects_unknown_language(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init", "svc", "--language", "rust"])
+    assert result.exit_code == 2
+
+
+def test_adopt_keeps_existing_files(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "README.md").write_text("MY EXISTING APP", encoding="utf-8")
+    result = runner.invoke(app, ["adopt"])
+    assert result.exit_code == 0
+    assert (tmp_path / "README.md").read_text(encoding="utf-8") == "MY EXISTING APP"
+    assert (tmp_path / "keystone.json").exists()

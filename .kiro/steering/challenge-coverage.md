@@ -37,7 +37,7 @@
 |---|---|---|
 | ≥1 functional command (PoC minimum) | `standards-check` in `cli.py` | ✅ |
 | Standardize git workflows (branch / PR prep / review) | `cli.py` `pr` (stub), `.kiro/specs/devex-cli/tasks.md` #9 | ⬜ |
-| Automate conventions / bootstrap (`init` / `adopt`) | `cli.py` `init` (stub), tasks #7–8 | ⬜ |
+| Automate conventions / bootstrap (`init` / `adopt`) | `cli.py` `init` + `adopt`, `scaffold.py` (shell-out to framework generator + fallback) | ✅ |
 | Branch / commit / Work ID validation | `validators.py` (+ tests) | ✅ |
 | Local pipeline simulation | tasks #12 | ⬜ |
 | Distribution: uv · git install · versioned · easy upgrade | `pyproject.toml`, `.claude/rules/releasing.md`, README | 🟡 |

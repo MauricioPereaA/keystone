@@ -17,7 +17,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from devex import __version__
+from devex import __version__, scaffold
 from devex.conventions import load_conventions
 from devex.dora import DEFAULT_ENV, compute_metrics, parse_events
 from devex.exit_codes import ExitCode
@@ -86,10 +86,66 @@ def check_pr_title(title: str = typer.Argument(..., help="The pull-request title
         raise typer.Exit(code=ExitCode.VALIDATION)
 
 
+def _generate_workflows(target: Path) -> bool:
+    """Best-effort: run the @keystone/platform generator if node + the framework are available."""
+    try:
+        proc = subprocess.run(
+            ["node", "scripts/generate-workflows.mjs"],
+            cwd=target,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except (FileNotFoundError, OSError, subprocess.SubprocessError):
+        return False
+    return proc.returncode == 0
+
+
+def _report_scaffold(result: scaffold.ScaffoldResult, target: Path) -> None:
+    for path in result.created:
+        console.print(f"[green]+[/] {path}")
+    for path in result.skipped:
+        console.print(f"[yellow]·[/] kept existing {path}")
+    if _generate_workflows(target):
+        console.print("[green]✓[/] generated CI workflows via @keystone/platform")
+    else:
+        console.print("[yellow]ℹ[/] run 'pnpm install && pnpm generate:workflows' to emit the CI workflows")
+
+
+def _require_language(language: str) -> None:
+    if language not in scaffold.LANGUAGES:
+        console.print(f"[red]✗[/] unknown language '{language}' (expected: {', '.join(scaffold.LANGUAGES)})")
+        raise typer.Exit(code=ExitCode.CONFIG)
+
+
 @app.command()
-def init(name: str = typer.Argument(..., help="Service name")) -> None:
-    """Bootstrap a new service onto the golden path. TODO: scaffold from template."""
-    console.print(f"[yellow]TODO[/] init '{name}' — see .kiro/specs/devex-cli/tasks.md")
+def init(
+    service: str = typer.Argument(..., help="Service name (lowercase kebab)."),
+    language: str = typer.Option("python", "--language", help="App language: python|go|clojure|typescript."),
+    here: bool = typer.Option(False, "--here", help="Scaffold into the current directory instead of ./<service>."),
+) -> None:
+    """Bootstrap a new service onto the golden path (skeleton + PR template + CI workflows)."""
+    _require_language(language)
+    if not scaffold.is_valid_service_name(service):
+        console.print(f"[red]✗[/] invalid service name '{service}' (expected lowercase kebab, e.g. 'transactionify')")
+        raise typer.Exit(code=ExitCode.CONFIG)
+    target = Path.cwd() if here else Path(service)
+    result = scaffold.scaffold_service(target, service, language, overwrite=False)
+    _report_scaffold(result, target)
+    console.print(f"\n[bold]Service '{service}' is on the golden path.[/]")
+
+
+@app.command()
+def adopt(
+    language: str = typer.Option("python", "--language", help="App language: python|go|clojure|typescript."),
+) -> None:
+    """Add Keystone artifacts to the EXISTING repo in the current directory (never overwrites app code)."""
+    _require_language(language)
+    target = Path.cwd()
+    service = target.name
+    result = scaffold.scaffold_service(target, service, language, overwrite=False)
+    _report_scaffold(result, target)
+    console.print(f"\n[bold]'{service}' adopted the golden path.[/] Existing files were kept.")
 
 
 @app.command()
