@@ -17,13 +17,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from devex import __version__, scaffold
+from devex import __version__, hooks, pipeline, scaffold
 from devex.conventions import load_conventions
 from devex.dora import DEFAULT_ENV, compute_metrics, parse_events
 from devex.exit_codes import ExitCode
 from devex.schema import ConventionsError
 from devex.settings import telemetry_stream_path
-from devex.validators import validate_branch, validate_commit, validate_pr_title
+from devex.validators import Result, validate_branch, validate_commit, validate_pr_title
 from devex.work_id import extract_work_id
 
 # Ensure UTF-8 output so Rich status glyphs (✓ / ✗) render on legacy Windows
@@ -60,16 +60,21 @@ def version() -> None:
     console.print(f"devex {__version__}")
 
 
-@app.command(name="standards-check")
-def standards_check() -> None:
-    """Validate the current branch and last commit against conventions.json (shift-left)."""
-    checks = [
+def _standards_results() -> list[Result]:
+    """Validate the current branch + last commit against conventions.json."""
+    return [
         validate_branch(_git("rev-parse", "--abbrev-ref", "HEAD") or "HEAD"),
         validate_commit(_git("log", "-1", "--pretty=%s") or ""),
     ]
-    for r in checks:
+
+
+@app.command(name="standards-check")
+def standards_check() -> None:
+    """Validate the current branch and last commit against conventions.json (shift-left)."""
+    results = _standards_results()
+    for r in results:
         console.print(("[green]✓[/] " if r.ok else "[red]✗[/] ") + r.message)
-    if not all(r.ok for r in checks):
+    if not all(r.ok for r in results):
         raise typer.Exit(code=ExitCode.VALIDATION)
 
 
@@ -146,6 +151,100 @@ def adopt(
     result = scaffold.scaffold_service(target, service, language, overwrite=False)
     _report_scaffold(result, target)
     console.print(f"\n[bold]'{service}' adopted the golden path.[/] Existing files were kept.")
+
+
+@app.command()
+def pr(
+    draft: bool = typer.Option(False, "--draft", help="Open the PR as a draft."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print what would happen without calling gh."),
+) -> None:
+    """Open a PR via gh: the title comes from your last commit (Work ID enforced) + the standard template."""
+    branch = _git("rev-parse", "--abbrev-ref", "HEAD")
+    if branch in load_conventions()["branch"].get("protected", []):
+        console.print(f"[red]✗[/] '{branch}' is a protected branch — create a feature branch first")
+        raise typer.Exit(code=ExitCode.CONFIG)
+    title = _git("log", "-1", "--pretty=%s")
+    result = validate_pr_title(title)
+    if not result.ok:
+        console.print("[red]✗[/] " + result.message)
+        console.print("The PR title is taken from your last commit — make it '<type>(<scope>): WORK-ID subject'.")
+        raise typer.Exit(code=ExitCode.VALIDATION)
+    if dry_run:
+        console.print(f"[green]✓[/] would open PR [bold]{title}[/] from branch '{branch}'")
+        return
+    cmd = ["gh", "pr", "create", "--title", title, "--body", scaffold.pr_template()]
+    if draft:
+        cmd.append("--draft")
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except (FileNotFoundError, OSError, subprocess.SubprocessError) as exc:
+        console.print(f"[red]✗[/] could not run gh: {exc}")
+        raise typer.Exit(code=ExitCode.CONFIG) from None
+    if proc.returncode != 0:
+        console.print(f"[red]✗[/] gh pr create failed: {proc.stderr.strip()}")
+        raise typer.Exit(code=ExitCode.CONFIG)
+    console.print(proc.stdout.strip())
+
+
+hooks_app = typer.Typer(help="Manage git hooks (shift-left validation).", no_args_is_help=True)
+app.add_typer(hooks_app, name="hooks")
+
+
+@hooks_app.command("install")
+def hooks_install(
+    force: bool = typer.Option(False, "--force", help="Replace pre-existing non-Keystone hooks."),
+) -> None:
+    """Install pre-commit + pre-push hooks that run `devex standards-check`."""
+    hooks_path = _git("rev-parse", "--git-path", "hooks")
+    if not hooks_path:
+        console.print("[red]✗[/] not a git repository")
+        raise typer.Exit(code=ExitCode.CONFIG)
+    installed, skipped = hooks.install_hooks(Path(hooks_path), force=force)
+    for path in installed:
+        console.print(f"[green]+[/] installed {path}")
+    for path in skipped:
+        console.print(f"[yellow]·[/] kept existing {path} (use --force to replace)")
+
+
+pipeline_app = typer.Typer(help="Run pipeline stages locally.", no_args_is_help=True)
+app.add_typer(pipeline_app, name="pipeline")
+
+
+@pipeline_app.command("run")
+def pipeline_run(
+    local: bool = typer.Option(True, "--local/--no-local", help="Run the small-tests stage locally."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="List the stages without running the tests."),
+) -> None:
+    """Simulate the PR pipeline's small-tests stage locally (shift-left)."""
+    if not local:
+        console.print("[yellow]ℹ[/] only --local is supported in the PoC")
+        raise typer.Exit(code=ExitCode.CONFIG)
+    language = pipeline.detect_language(Path.cwd())
+    command = pipeline.language_test_command(language)
+    console.print(f"[bold]pipeline run --local[/] (language: {language})")
+
+    # Stage 1 — conventions gate.
+    results = _standards_results()
+    for r in results:
+        console.print(("  [green]✓[/] " if r.ok else "  [red]✗[/] ") + r.message)
+    gate_ok = all(r.ok for r in results)
+
+    # Stage 2 — small-tests.
+    if command is None:
+        console.print(f"  [yellow]·[/] no local test command mapped for '{language}'")
+    else:
+        console.print(f"  small-tests: {' '.join(command)}")
+    if not dry_run and command is not None:
+        try:
+            tests_ok = subprocess.run(command, timeout=600).returncode == 0
+        except (FileNotFoundError, OSError, subprocess.SubprocessError) as exc:
+            console.print(f"  [red]✗[/] could not run tests: {exc}")
+            raise typer.Exit(code=ExitCode.CONFIG) from None
+    else:
+        tests_ok = True
+
+    if not gate_ok or not tests_ok:
+        raise typer.Exit(code=ExitCode.VALIDATION)
 
 
 @app.command()

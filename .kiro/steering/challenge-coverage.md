@@ -36,10 +36,10 @@
 | Capability | Where | Status |
 |---|---|---|
 | ≥1 functional command (PoC minimum) | `standards-check` in `cli.py` | ✅ |
-| Standardize git workflows (branch / PR prep / review) | `cli.py` `pr` (stub), `.kiro/specs/devex-cli/tasks.md` #9 | ⬜ |
+| Standardize git workflows (branch / PR prep / review) | `cli.py` `pr` (Work ID enforced from commit + template, via gh) | ✅ |
 | Automate conventions / bootstrap (`init` / `adopt`) | `cli.py` `init` + `adopt`, `scaffold.py` (shell-out to framework generator + fallback) | ✅ |
 | Branch / commit / Work ID validation | `validators.py` (+ tests) | ✅ |
-| Local pipeline simulation | tasks #12 | ⬜ |
+| Local pipeline simulation | `cli.py` `pipeline run --local` + `pipeline.py` | ✅ |
 | Distribution: uv · git install · versioned · easy upgrade | `pyproject.toml`, `.claude/rules/releasing.md`, README | 🟡 |
 
 ## 4. Component B — Workflow Framework
@@ -83,7 +83,7 @@
 | Bonus | Where | Status |
 |---|---|---|
 | A — Local dev env (Docker Compose / LocalStack / Testcontainers) | — | ⬜ |
-| B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅; `devex hooks install` (stub, task #10) | 🟡 |
+| B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅ + `devex hooks install` (native pre-commit/pre-push) | ✅ |
 | C — AI-assisted PR reviews (Amazon Q) | — | ⬜ |
 | D — Integration Pipeline PoC (working impl) | `…/workflows/` | ⬜ |
 | E — Kiro evidence (steering · specs · AI context) | `.kiro/steering/`, `.kiro/specs/` | ✅ |
