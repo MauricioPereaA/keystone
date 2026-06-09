@@ -32,6 +32,16 @@ def test_package_json_pulls_the_framework(tmp_path: Path) -> None:
     assert pkg["scripts"]["generate:workflows"]
 
 
+def test_generate_wrapper_threads_api_spec_through(tmp_path: Path) -> None:
+    # keystone.json's optional apiSpec must reach both generators so the
+    # contract step targets the service's real OpenAPI spec.
+    scaffold_service(tmp_path, "svc", "python", overwrite=False)
+    wrapper = (tmp_path / "scripts" / "generate-workflows.mjs").read_text(encoding="utf-8")
+    assert "apiSpec" in wrapper
+    assert "generatePrPipeline({ repo: service, language, apiSpec })" in wrapper
+    assert "generateIntegrationPipeline({ repo: service, language, apiSpec })" in wrapper
+
+
 def test_adopt_never_overwrites_existing_files(tmp_path: Path) -> None:
     existing = tmp_path / "README.md"
     existing.write_text("MY EXISTING APP", encoding="utf-8")

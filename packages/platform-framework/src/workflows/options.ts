@@ -22,6 +22,15 @@ export interface PrPipelineOptions {
    * Defaults to `["sandbox"]` (the challenge's PR-pipeline contract).
    */
   environments?: Environment[];
+  /**
+   * Path to the service's OpenAPI spec, used by the API-contract step.
+   * When omitted, the generated step auto-detects `openapi.yaml|yml|json` at
+   * the repo root at runtime. Set it (via `keystone.json` `apiSpec`) for
+   * services that keep the spec elsewhere. Currently honored by the python
+   * toolchain (schemathesis); the other toolchains delegate the contract step
+   * to a project script and ignore this option.
+   */
+  apiSpec?: string;
 }
 
 /** Options for {@link generateIntegrationPipeline}. */
@@ -35,4 +44,13 @@ export interface IntegrationPipelineOptions {
    * A final `emit-metrics` job always runs after the last deploy.
    */
   environments?: Environment[];
+  /**
+   * Path to the service's OpenAPI spec, used by the API-contract step.
+   * When omitted, the generated step auto-detects `openapi.yaml|yml|json` at
+   * the repo root at runtime. Set it (via `keystone.json` `apiSpec`) for
+   * services that keep the spec elsewhere. Currently honored by the python
+   * toolchain (schemathesis); the other toolchains delegate the contract step
+   * to a project script and ignore this option.
+   */
+  apiSpec?: string;
 }

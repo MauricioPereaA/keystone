@@ -9,7 +9,7 @@
 import { NormalJob, expressions } from "@github-actions-workflow-ts/lib";
 import type { Environment } from "../telemetry/index.js";
 import type { Language } from "./options.js";
-import { LANGUAGE_TOOLCHAINS } from "./toolchains.js";
+import { LANGUAGE_TOOLCHAINS, assertValidApiSpec, type ToolchainContext } from "./toolchains.js";
 import {
   cdkDeployStep,
   cdkSetupSteps,
@@ -22,7 +22,8 @@ import {
 } from "./steps.js";
 
 /** small-tests: validate conventions (devex) + the language's unit/PBT/contract suite. */
-export function smallTestsJob(language: Language): NormalJob {
+export function smallTestsJob(language: Language, ctx: ToolchainContext = {}): NormalJob {
+  assertValidApiSpec(ctx.apiSpec); // keystone.json input — fail at generation, not in CI
   const toolchain = LANGUAGE_TOOLCHAINS[language];
   const job = new NormalJob("small-tests", {
     "runs-on": "ubuntu-latest",
@@ -30,7 +31,7 @@ export function smallTestsJob(language: Language): NormalJob {
     // Publish the Work ID so downstream deploy jobs can stamp it into telemetry.
     outputs: { work_id: expressions.expn("steps.standards.outputs.work_id") },
   });
-  job.addSteps([checkoutStep(), setupUvStep(), standardsCheckStep(), ...toolchain.setup(), ...toolchain.smallTests()]);
+  job.addSteps([checkoutStep(), setupUvStep(), standardsCheckStep(), ...toolchain.setup(), ...toolchain.smallTests(ctx)]);
   return job;
 }
 

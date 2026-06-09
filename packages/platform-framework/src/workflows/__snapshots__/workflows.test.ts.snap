@@ -39,14 +39,35 @@ jobs:
           else
             uv venv
             # uv pip install auto-targets the .venv just created — no activation needed (uv != pip).
+            deps_found=""
             for req in requirements.txt requirements-dev.txt; do
-              [ -f "$req" ] && uv pip install -r "$req"
+              if [ -f "$req" ]; then
+                uv pip install -r "$req"
+                deps_found=1
+              fi
             done
+            if [ -z "$deps_found" ]; then
+              echo "::error::no pyproject.toml, requirements.txt or requirements-dev.txt at the repo root — the python toolchain has nothing to install"
+              exit 1
+            fi
           fi
       - name: Unit + property-based tests
         run: uv run --no-project pytest -q
       - name: API contract tests
-        run: uv run --no-project schemathesis run --checks all openapi.json
+        run: |-
+          set -euo pipefail
+          spec=""
+          for candidate in openapi.yaml openapi.yml openapi.json; do
+            if [ -f "$candidate" ]; then
+              spec="$candidate"
+              break
+            fi
+          done
+          if [ -z "$spec" ]; then
+            echo "::error::no OpenAPI spec found (openapi.yaml, openapi.yml, openapi.json) — add one at the repo root or set apiSpec in keystone.json"
+            exit 1
+          fi
+          uv run --no-project schemathesis run --checks all "$spec"
   deploy-sandbox:
     runs-on: ubuntu-latest
     environment: sandbox

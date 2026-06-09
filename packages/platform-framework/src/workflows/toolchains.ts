@@ -13,6 +13,12 @@
 import { Step } from "@github-actions-workflow-ts/lib";
 import type { Language } from "./options.js";
 
+/** Per-service knobs a toolchain may honor (threaded from the generator options). */
+export interface ToolchainContext {
+  /** OpenAPI spec path for the contract step; omitted = runtime auto-detect. */
+  readonly apiSpec?: string;
+}
+
 export interface Toolchain {
   /** Human-readable language label (used in step names). */
   readonly label: string;
@@ -22,7 +28,73 @@ export interface Toolchain {
    * The small-tests steps: unit + property-based + api-contract.
    * Same three categories for every language — that is the comparability rule.
    */
-  smallTests(): Step[];
+  smallTests(ctx: ToolchainContext): Step[];
+}
+
+/**
+ * Spec filenames the generated contract step probes at the repo root, in order.
+ * Real services name the file either way (Transactionify ships `openapi.yaml`);
+ * the golden path adopts them as-is instead of forcing a rename.
+ */
+const OPENAPI_SPEC_CANDIDATES = ["openapi.yaml", "openapi.yml", "openapi.json"];
+
+/**
+ * apiSpec lands inside a generated shell line, so anything but a plain relative
+ * path (quotes, `$`, backticks, newlines, a leading dash) would break out of —
+ * or inject into — the emitted script. Generators fail at build, never emit a
+ * broken workflow (error-handling.md), so the guard throws at generation time.
+ */
+const SAFE_API_SPEC = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
+
+/** Generation-time guard for the apiSpec option (keystone.json is untrusted input). */
+export function assertValidApiSpec(apiSpec: unknown): void {
+  if (apiSpec === undefined) return;
+  if (typeof apiSpec !== "string" || !SAFE_API_SPEC.test(apiSpec)) {
+    throw new Error(
+      `invalid apiSpec ${JSON.stringify(apiSpec)} — expected a plain relative path ` +
+        `(${String(SAFE_API_SPEC)}); fix the apiSpec value in keystone.json`,
+    );
+  }
+}
+
+/**
+ * API-contract step (python): schemathesis generates cases from the OpenAPI
+ * schema (see .claude/rules/testing-conventions.md). With an explicit spec the
+ * step verifies the file exists; otherwise it probes the candidates at runtime.
+ * Either way a missing spec fails with an actionable message.
+ */
+function pythonApiContractStep(ctx: ToolchainContext): Step {
+  if (ctx.apiSpec) {
+    return new Step({
+      name: "API contract tests",
+      run: [
+        "set -euo pipefail",
+        `if [ ! -f "${ctx.apiSpec}" ]; then`,
+        `  echo "::error::apiSpec '${ctx.apiSpec}' (from keystone.json) does not exist in the repo"`,
+        "  exit 1",
+        "fi",
+        `uv run --no-project schemathesis run --checks all "${ctx.apiSpec}"`,
+      ].join("\n"),
+    });
+  }
+  return new Step({
+    name: "API contract tests",
+    run: [
+      "set -euo pipefail",
+      'spec=""',
+      `for candidate in ${OPENAPI_SPEC_CANDIDATES.join(" ")}; do`,
+      '  if [ -f "$candidate" ]; then',
+      '    spec="$candidate"',
+      "    break",
+      "  fi",
+      "done",
+      'if [ -z "$spec" ]; then',
+      `  echo "::error::no OpenAPI spec found (${OPENAPI_SPEC_CANDIDATES.join(", ")}) — add one at the repo root or set apiSpec in keystone.json"`,
+      "  exit 1",
+      "fi",
+      'uv run --no-project schemathesis run --checks all "$spec"',
+    ].join("\n"),
+  });
 }
 
 export const LANGUAGE_TOOLCHAINS: Record<Language, Toolchain> = {
@@ -41,19 +113,27 @@ export const LANGUAGE_TOOLCHAINS: Record<Language, Toolchain> = {
           "else",
           "  uv venv",
           "  # uv pip install auto-targets the .venv just created — no activation needed (uv != pip).",
+          '  deps_found=""',
           "  for req in requirements.txt requirements-dev.txt; do",
-          '    [ -f "$req" ] && uv pip install -r "$req"',
+          // Explicit `if`, not `[ -f ] && …`: an absent file on the loop's last
+          // iteration would otherwise leave a non-zero status and fail the step.
+          '    if [ -f "$req" ]; then',
+          '      uv pip install -r "$req"',
+          "      deps_found=1",
+          "    fi",
           "  done",
+          '  if [ -z "$deps_found" ]; then',
+          '    echo "::error::no pyproject.toml, requirements.txt or requirements-dev.txt at the repo root — the python toolchain has nothing to install"',
+          "    exit 1",
+          "  fi",
           "fi",
         ].join("\n"),
       }),
     ],
     // --no-project so the same command works for the uv-native and the pip venv.
-    smallTests: () => [
+    smallTests: (ctx) => [
       new Step({ name: "Unit + property-based tests", run: "uv run --no-project pytest -q" }),
-      // schemathesis generates API-contract cases from the OpenAPI schema and
-      // pairs with Hypothesis (see .claude/rules/testing-conventions.md).
-      new Step({ name: "API contract tests", run: "uv run --no-project schemathesis run --checks all openapi.json" }),
+      pythonApiContractStep(ctx),
     ],
   },
   typescript: {

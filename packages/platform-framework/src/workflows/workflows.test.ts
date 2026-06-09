@@ -59,6 +59,41 @@ describe("PR pipeline generator", () => {
     expect(yaml).toContain("requirements.txt"); // pip path (uv pip install)
   });
 
+  it("pip install loop is exit-status safe (regression: absent requirements-dev.txt must not fail the step)", () => {
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
+    // `[ -f "$req" ] && …` leaves status 1 when the loop's LAST candidate is
+    // absent — the common requirements.txt-only service — failing the step.
+    expect(yaml).not.toContain('[ -f "$req" ] &&');
+    expect(yaml).toContain('if [ -f "$req" ]; then');
+    // And an empty venv (nothing to install) fails fast with a clear message.
+    expect(yaml).toContain("nothing to install");
+  });
+
+  it("api-contract step auto-detects the service's OpenAPI spec at runtime by default", () => {
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
+    expect(yaml).toContain("for candidate in openapi.yaml openapi.yml openapi.json");
+    expect(yaml).toContain("::error::no OpenAPI spec found");
+  });
+
+  it("apiSpec option pins the contract step to the service's real spec", () => {
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python", apiSpec: "spec/api.yaml" }));
+    expect(yaml).toContain('schemathesis run --checks all "spec/api.yaml"');
+    expect(yaml).toContain("does not exist in the repo"); // pinned spec still fail-fast checked
+    expect(yaml).not.toContain("for candidate in"); // no detection loop when pinned
+  });
+
+  it("rejects an apiSpec that is not a plain relative path (generators fail at build, not in CI)", () => {
+    // apiSpec is interpolated into a generated shell line; quotes/$/newlines/
+    // leading dashes would break out of it, so generation must throw instead.
+    for (const bad of ['x"; touch INJECTED; echo "', "-leading-dash.yaml", "a b.yaml", "a\nb.yaml", "$HOME.yaml"]) {
+      expect(() => generatePrPipeline({ repo: "x", language: "python", apiSpec: bad })).toThrow(/apiSpec/);
+    }
+    // non-string junk from a hand-edited keystone.json is rejected too
+    expect(() =>
+      generatePrPipeline({ repo: "x", language: "python", apiSpec: {} as unknown as string }),
+    ).toThrow(/apiSpec/);
+  });
+
   it("generated multi-line shell steps are explicitly fail-fast (set -euo pipefail)", () => {
     const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
     expect(yaml).toContain("set -euo pipefail");
@@ -90,6 +125,11 @@ describe("Integration pipeline generator", () => {
     const wf = generateIntegrationPipeline({ repo: "acme/svc", language: "python" });
     const runs = (jobsOf(wf)["emit-metrics"].steps ?? []).map((s) => s.run ?? "");
     expect(runs.some((r) => /devex dora/.test(r))).toBe(true);
+  });
+
+  it("threads apiSpec into its small-tests job too (mutation guard for the production gate)", () => {
+    const yaml = workflowToYaml(generateIntegrationPipeline({ repo: "x", language: "python", apiSpec: "spec/api.yaml" }));
+    expect(yaml).toContain('schemathesis run --checks all "spec/api.yaml"');
   });
 });
 
