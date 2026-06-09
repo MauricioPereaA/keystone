@@ -6,7 +6,18 @@
 > repo and its status. Claude Code: keep this in sync as you implement —
 > flip 🟡/⬜ → ✅ and update the location when you finish a task.
 
-**Status legend:** ✅ done · 🟡 scaffolded (stub/contract present, logic pending) · ⬜ not started
+**Status legend:** ✅ done · 🟡 partial (in place; live run / verification pending) · ⏸️ deferred to the validation phase · ⬜ not started
+
+## Build status (snapshot)
+
+The **core + bonuses are built, tested, and dogfooded**:
+
+- **CLI** (`devex`): `standards-check`, `check-pr-title`, `workid`, `init`, `adopt`, `pr`, `hooks install`, `pipeline run --local`, `dora` — 71 tests, 88% coverage.
+- **Framework** (`@keystone/platform`): telemetry contract, type-safe PR + Integration workflow generators (Option B), `GoldenService` CDK construct (Option A, cdk-nag clean) — 22 tests, `tsc` + build clean.
+- **Governance / CI**: single `conventions.json`; dogfooded `ci.yml` (CLI tests + framework tests + conventions drift) + `pr-title.yml`; two-reviewer ruleset-as-code (ADR-0003).
+- **Bonuses**: A (LocalStack dev env) ✅ · B (git hooks) ✅ · C (Amazon Q reviews, live against `.amazonq/rules`) ✅ · D (Integration Pipeline generator) ✅.
+
+**Pending = the validation phase (⏸️):** clean-machine install check, a live AWS sandbox deploy emitting a real `DoraEvent`, and the Transactionify adoption case study — plus the ADR PDF render. These need a real AWS account / the reference service; the platform itself is complete.
 
 ---
 
@@ -84,7 +95,7 @@
 |---|---|---|
 | A — Local dev env (Docker Compose / LocalStack / Testcontainers) | `docker-compose.yml` (LocalStack) + `make localstack-up/down` + `docs/runbooks/local-dev-env.md` | ✅ |
 | B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅ + `devex hooks install` (native pre-commit/pre-push) | ✅ |
-| C — AI-assisted PR reviews (Amazon Q) | `.amazonq/rules/*.md` (mapped from `.claude/rules/`) + `docs/runbooks/amazon-q-reviews.md` | 🟡 config + docs ✅; GitHub App install is the owner's one-click step |
+| C — AI-assisted PR reviews (Amazon Q) | `.amazonq/rules/*.md` (mapped from `.claude/rules/`) + `docs/runbooks/amazon-q-reviews.md` | ✅ installed + reviewing PRs against `.amazonq/rules` (verified on PR #17) |
 | D — Integration Pipeline PoC (working impl) | `…/workflows/generateIntegrationPipeline` (+ snapshot/structure tests) | 🟡 generator ✅; live end-to-end run pending |
 | E — Kiro evidence (steering · specs · AI context) | `.kiro/steering/`, `.kiro/specs/` | ✅ |
 

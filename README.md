@@ -69,7 +69,7 @@ cd packages/platform-framework && pnpm install && pnpm test && pnpm lint
 
 ## Documentation
 
-- **Architecture & rationale:** [`docs/architecture/adr/`](docs/architecture/adr/) and the 2-page ADR PDF.
+- **Architecture & rationale:** [`docs/architecture/adr/`](docs/architecture/adr/) (the 2-page ADR PDF is rendered from these at project close).
 - **Consumption guide:** [`docs/consumption-guide.md`](docs/consumption-guide.md)
 - **Contribution (inner-source) guide:** [`docs/contributing.md`](docs/contributing.md)
 - **AWS conventions & cost guardrails:** [`.claude/rules/aws-cdk.md`](.claude/rules/aws-cdk.md)
