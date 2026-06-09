@@ -10,7 +10,7 @@ gets both packages running locally.
 make doctor      # checks uv, node, pnpm
 ```
 
-Install: `uv` (Python 3.12+), Node 20+, `pnpm` 9+. For deploys you'll also want
+Install: `uv` (Python 3.12+), Node 24 (Active LTS, matches CI), `pnpm` 9+. For deploys you'll also want
 the AWS CLI configured and a GitHub OIDC role (see `docs/runbooks/github-aws-oidc.md`).
 
 ## Install & test both packages

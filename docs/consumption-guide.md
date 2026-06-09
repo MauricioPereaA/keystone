@@ -30,7 +30,7 @@ In your service's infra/CI workspace:
 ```bash
 pnpm add "github:MauricioPereaA/keystone#path:/packages/platform-framework"
 # or pinned (also works for forks):
-pnpm add "MauricioPereaA/keystone#cli-v0.1.0&path:/packages/platform-framework"
+pnpm add "MauricioPereaA/keystone#framework-v0.1.0&path:/packages/platform-framework"
 ```
 
 ---
@@ -109,7 +109,7 @@ uv tool install --force "git+https://github.com/MauricioPereaA/keystone@cli-v0.2
 # Framework
 pnpm update "@keystone/platform"
 # then regenerate workflows so you pick up new stages/telemetry
-devex init --regenerate-workflows   # (or re-run the generator)
+pnpm generate:workflows   # re-runs the @keystone/platform generator in your repo
 ```
 
 Versioning is independent per package (`cli-v*` / `framework-v*`); both are
