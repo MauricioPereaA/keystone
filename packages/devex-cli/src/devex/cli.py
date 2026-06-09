@@ -23,7 +23,7 @@ from devex.conventions import load_conventions
 from devex.dora import DEFAULT_ENV, compute_metrics, parse_events
 from devex.exit_codes import ExitCode
 from devex.schema import ConventionsError
-from devex.settings import ci_branch, telemetry_stream_path
+from devex.settings import ci_branch, is_ci_pull_request, telemetry_stream_path
 from devex.validators import Result, validate_branch, validate_commit, validate_pr_title
 from devex.work_id import extract_work_id
 
@@ -64,16 +64,6 @@ def _resolve_branch() -> str:
     return ci_branch() or _git("rev-parse", "--abbrev-ref", "HEAD") or "HEAD"
 
 
-def _resolve_commit_subject() -> str:
-    """Subject of the latest non-merge commit ("" if none is reachable).
-
-    `--no-merges` skips the synthetic merge commit a `pull_request` checkout lands
-    on; on a shallow merge ref where no real commit is present, this is empty and
-    the caller skips the commit check rather than failing on the merge subject.
-    """
-    return _git("log", "-1", "--no-merges", "--pretty=%s")
-
-
 @app.command()
 def version() -> None:
     """Print the CLI version."""
@@ -83,14 +73,14 @@ def version() -> None:
 def _standards_results() -> list[Result]:
     """Validate the current branch + last commit against conventions.json (CI-aware)."""
     results = [validate_branch(_resolve_branch())]
-    subject = _resolve_commit_subject()
-    if not subject and ci_branch() is not None:
-        # Detached/shallow CI checkout with no real commit reachable: the branch
-        # already carries the Work ID, and local hooks validate commits at write
-        # time — skip rather than fail on the synthetic merge subject.
-        results.append(Result(True, "commit check skipped (no non-merge commit in CI checkout)"))
+    if is_ci_pull_request():
+        # A pull_request checkout is a synthetic, shallow merge ref: the real
+        # change commit isn't reachable (git sees the merge as parentless), so
+        # validating it would fail on the merge subject. The branch carries the
+        # Work ID; the local commit-msg hook validates commits at write time.
+        results.append(Result(True, "commit check skipped (pull_request checkout)"))
     else:
-        results.append(validate_commit(subject))
+        results.append(validate_commit(_git("log", "-1", "--pretty=%s")))
     return results
 
 
@@ -297,7 +287,7 @@ def workid(
     ),
 ) -> None:
     """Print the Work ID for the current change (generated CI uses it to stamp telemetry)."""
-    candidates = [ref] if ref else [_resolve_branch(), _resolve_commit_subject()]
+    candidates = [ref] if ref else [_resolve_branch(), _git("log", "-1", "--pretty=%s")]
     for text in candidates:
         work_id = extract_work_id(text or "")
         if work_id:
