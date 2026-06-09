@@ -42,7 +42,7 @@
     "schemaVersion": "1.0.0",
     "events": ["deployment.started", "deployment.succeeded", "deployment.failed", "deployment.rolled_back"],
     "doraMetrics": ["deployment_frequency", "lead_time_for_changes", "change_failure_rate", "mttr"],
-    "requiredFields": ["event", "work_id", "actor", "repo", "env", "commit_sha", "commit_time", "timestamp"],
+    "requiredFields": ["event", "workId", "actor", "repo", "env", "commitSha", "commitTime", "timestamp"],
     "description": "Language-agnostic event contract. Because @keystone/platform generates the workflows, every team emits this identical shape regardless of app language (Python, Go, Clojure, TypeScript). This is what makes DORA metrics comparable."
   }
 }

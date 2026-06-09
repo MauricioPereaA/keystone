@@ -17,7 +17,7 @@
 | A | Python CLI, `uv tool install git+…#subdirectory=` | `packages/devex-cli/` (`pyproject.toml`, self-contained), `README.md` | 🟡 packaging done + `standards-check` works; verify install after first push |
 | B | TS Framework, `pnpm add github:…#path:` | `packages/platform-framework/` (`package.json` subpath exports) | 🟡 telemetry done; workflow/construct generators are stubs |
 | C | Unit tests (CLI + framework) | `packages/devex-cli/tests/` (10: unit+PBT), `…/telemetry/telemetry.test.ts` (3) | ✅ |
-| D | DORA telemetry: collection · standardization · reporting | contract `…/src/telemetry/`; collection = workflow `emitTelemetryStep`; reporting = `devex dora` | 🟡 contract ✅; collection + `devex dora` pending |
+| D | DORA telemetry: collection · standardization · reporting | contract `…/src/telemetry/`; collection = workflow `emitTelemetryStep`; reporting = `devex dora` | ✅ contract + collection (emitTelemetryStep) + reporting (`devex dora`) |
 | E | README (architecture · install · usage · dev workflow) | `README.md` | ✅ |
 | F | Consumption Guide (install · configure · extend · upgrade) | `docs/consumption-guide.md` | ✅ |
 | G | Contribution Guide (inner-source) | `docs/contributing.md`, `CONTRIBUTING.md` | ✅ |
@@ -74,7 +74,7 @@
 | Requirement | Where | Status |
 |---|---|---|
 | Single source of truth | `conventions.json` + `…/telemetry/` (ADR-0002) | ✅ design |
-| 4 metrics comparable across Py/Go/Clojure/TS | `DoraEvent` contract; `devex dora` compute | 🟡 (contract ✅; compute pending) |
+| 4 metrics comparable across Py/Go/Clojure/TS | `DoraEvent` contract; `devex dora` compute (freq · lead time · CFR · MTTR) | ✅ (contract + compute) |
 | Unified audit trail (who/what/when/why) | `DoraEvent` fields, `audit-logging.md` | ✅ design |
 | SOC 2 support | `soc2.md` (CC6.1/6.6/7.2/7.3/8.1/9.2) | ✅ |
 
