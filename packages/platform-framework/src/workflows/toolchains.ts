@@ -58,27 +58,35 @@ export function assertValidApiSpec(apiSpec: unknown): void {
 }
 
 /**
- * API-contract step (python): schemathesis generates cases from the OpenAPI
- * schema (see .claude/rules/testing-conventions.md). With an explicit spec the
- * step verifies the file exists; otherwise it probes the candidates at runtime.
- * Either way a missing spec fails with an actionable message.
+ * API-contract step (python), pre-deploy half: validate the OpenAPI schema
+ * itself — server-less, fast, and the only contract check that *can* run before
+ * the service exists. Live schemathesis fuzzing against the deployed API runs in
+ * the deploy stage, where there is a URL to hit (see testing-conventions.md).
+ *
+ * The validator is brought by `uvx` (like the devex gate), so a consuming
+ * service adds nothing to its own dependencies. With an explicit spec the step
+ * verifies the file exists; otherwise it probes the candidates at runtime. Either
+ * way a missing spec fails with an actionable message.
  */
+const VALIDATE_SCHEMA = (spec: string) =>
+  `uvx --from openapi-spec-validator openapi-spec-validator "${spec}"`;
+
 function pythonApiContractStep(ctx: ToolchainContext): Step {
   if (ctx.apiSpec) {
     return new Step({
-      name: "API contract tests",
+      name: "API contract: validate OpenAPI schema",
       run: [
         "set -euo pipefail",
         `if [ ! -f "${ctx.apiSpec}" ]; then`,
         `  echo "::error::apiSpec '${ctx.apiSpec}' (from keystone.json) does not exist in the repo"`,
         "  exit 1",
         "fi",
-        `uv run --no-project schemathesis run --checks all "${ctx.apiSpec}"`,
+        VALIDATE_SCHEMA(ctx.apiSpec),
       ].join("\n"),
     });
   }
   return new Step({
-    name: "API contract tests",
+    name: "API contract: validate OpenAPI schema",
     run: [
       "set -euo pipefail",
       'spec=""',
@@ -92,7 +100,7 @@ function pythonApiContractStep(ctx: ToolchainContext): Step {
       `  echo "::error::no OpenAPI spec found (${OPENAPI_SPEC_CANDIDATES.join(", ")}) — add one at the repo root or set apiSpec in keystone.json"`,
       "  exit 1",
       "fi",
-      'uv run --no-project schemathesis run --checks all "$spec"',
+      VALIDATE_SCHEMA("$spec"),
     ].join("\n"),
   });
 }

@@ -27,8 +27,8 @@ export interface PrPipelineOptions {
    * When omitted, the generated step auto-detects `openapi.yaml|yml|json` at
    * the repo root at runtime. Set it (via `keystone.json` `apiSpec`) for
    * services that keep the spec elsewhere. Currently honored by the python
-   * toolchain (schemathesis); the other toolchains delegate the contract step
-   * to a project script and ignore this option.
+   * toolchain (OpenAPI schema validation); the other toolchains delegate the
+   * contract step to a project script and ignore this option.
    */
   apiSpec?: string;
 }
@@ -49,8 +49,8 @@ export interface IntegrationPipelineOptions {
    * When omitted, the generated step auto-detects `openapi.yaml|yml|json` at
    * the repo root at runtime. Set it (via `keystone.json` `apiSpec`) for
    * services that keep the spec elsewhere. Currently honored by the python
-   * toolchain (schemathesis); the other toolchains delegate the contract step
-   * to a project script and ignore this option.
+   * toolchain (OpenAPI schema validation); the other toolchains delegate the
+   * contract step to a project script and ignore this option.
    */
   apiSpec?: string;
 }

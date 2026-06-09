@@ -53,7 +53,7 @@ jobs:
           fi
       - name: Unit + property-based tests
         run: uv run --no-project pytest -q
-      - name: API contract tests
+      - name: "API contract: validate OpenAPI schema"
         run: |-
           set -euo pipefail
           spec=""
@@ -67,7 +67,7 @@ jobs:
             echo "::error::no OpenAPI spec found (openapi.yaml, openapi.yml, openapi.json) — add one at the repo root or set apiSpec in keystone.json"
             exit 1
           fi
-          uv run --no-project schemathesis run --checks all "$spec"
+          uvx --from openapi-spec-validator openapi-spec-validator "$spec"
   deploy-sandbox:
     runs-on: ubuntu-latest
     environment: sandbox
