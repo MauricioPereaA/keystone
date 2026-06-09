@@ -8,8 +8,8 @@
 - [x] 4. `standards-check` command wired to validators with Rich output + exit codes. (R1)
 - [x] 5. Tests: unit (table-driven) + property-based (Hypothesis). (NFR)
 - [ ] 6. `make sync-conventions` + CI drift check (canonical file vs bundled copy). (R6)
-- [ ] 7. `init <service>`: scaffold service + PR template + call `@keystone/platform` workflow generator. (R2)
-- [ ] 8. `adopt` mode for existing repos (Transactionify case study). (R2)
+- [x] 7. `init <service>`: scaffold service + PR template + call `@keystone/platform` workflow generator (shell-out + fallback). (R2)
+- [x] 8. `adopt` mode for existing repos (Transactionify case study) — never overwrites app code. (R2)
 - [ ] 9. `pr` command: enforce Work ID in title, apply template, open PR via `gh`. (R3)
 - [ ] 10. `hooks install`: write pre-commit/pre-push hooks invoking `standards-check`. (R4)
 - [x] 11. `dora` command: parse NDJSON stream, compute the four metrics, Rich table. (R5) — plus `workid` (extracts the Work ID for generated CI telemetry).
