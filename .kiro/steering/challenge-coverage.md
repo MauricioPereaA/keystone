@@ -46,11 +46,11 @@
 
 | Capability | Where | Status |
 |---|---|---|
-| ≥1 shared artifact: type-safe GHA generator (Option B) | `…/workflows/generatePrPipeline` (stub) | 🟡 |
-| ≥1 shared artifact: reusable CDK construct (Option A) | `…/constructs/GoldenService` (stub) | 🟡 |
-| Shared pipeline stages / workflow defs / deploy patterns | `…/workflows/`, `conventions.json` `pipelines` | 🟡 |
-| Shared telemetry hooks | `…/telemetry/` (contract ✅) + injected `emitTelemetryStep` | 🟡 |
-| Distribution: pnpm · git install · multi-repo · reusable types | `package.json` exports, README | 🟡 |
+| ≥1 shared artifact: type-safe GHA generator (Option B) | `…/workflows/` `generatePrPipeline` + `generateIntegrationPipeline` | ✅ |
+| ≥1 shared artifact: reusable CDK construct (Option A) | `…/constructs/GoldenService` (Lambda + REST API GW + retention LogGroups + tags + cdk-nag clean) | ✅ |
+| Shared pipeline stages / workflow defs / deploy patterns | `…/workflows/` (per-language toolchains, OIDC, telemetry) | ✅ |
+| Shared telemetry hooks | `…/telemetry/` (contract ✅) + injected `emitTelemetryStep` in every deploy job | ✅ |
+| Distribution: pnpm · git install · multi-repo · reusable types | `package.json` exports, `dist/` + `.d.ts` | 🟡 (build ✅; consumer Git-install verification pending Phase 3) |
 
 ## 5. Shared Engineering Conventions & Git Governance
 
@@ -65,9 +65,9 @@
 
 | Requirement | Where | Status |
 |---|---|---|
-| PR Pipeline — small tests (unit + PBT + API-contract) | `conventions.json` `pipelines.prPipeline`, `testing-conventions.md` | 🟡 (spec ✅; generator todo) |
-| PR Pipeline — deploy sandbox → staging → production (CDK) | `aws-cdk.md`, `…/constructs/` | ⬜ |
-| Integration Pipeline (on `main`: validate · prod deploy · metrics) | `conventions.json` `pipelines.integrationPipeline`, spec | ⬜ conceptual (impl = bonus D) |
+| PR Pipeline — small tests (unit + PBT + API-contract) | `…/workflows/generatePrPipeline` + per-language toolchains | ✅ (generator emits it) |
+| PR Pipeline — deploy sandbox → staging → production (CDK) | `…/constructs/GoldenService` + generated OIDC deploy jobs | 🟡 (construct + deploy jobs ✅; live multi-account promotion not run) |
+| Integration Pipeline (on `main`: validate · prod deploy · metrics) | `…/workflows/generateIntegrationPipeline` | 🟡 (generator ✅ — bonus D; live run pending) |
 
 ## 7. DORA Metrics & Auditability
 
