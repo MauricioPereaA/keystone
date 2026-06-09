@@ -26,8 +26,13 @@ import { NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
 import type { Environment } from "../telemetry/index.js";
 
-/** Lambda runtimes the golden path supports. */
-export type GoldenServiceRuntime = "python3.12" | "nodejs20.x" | "provided.al2023";
+/**
+ * Lambda runtimes the golden path supports (AWS-supported, non-EOL tiers).
+ * nodejs24.x is the latest Active-LTS Lambda runtime (use async/return handlers —
+ * it drops the legacy callback handler signature); nodejs22.x stays available for
+ * services that still rely on callback-style handlers.
+ */
+export type GoldenServiceRuntime = "python3.12" | "nodejs22.x" | "nodejs24.x" | "provided.al2023";
 
 export interface GoldenServiceProps {
   /** Service name — used for resource names, the telemetry log group, and the `service` tag. */
@@ -53,7 +58,8 @@ export const GOLDEN_SERVICE_DEFAULTS = {
 
 const RUNTIMES: Record<GoldenServiceRuntime, lambda.Runtime> = {
   "python3.12": lambda.Runtime.PYTHON_3_12,
-  "nodejs20.x": lambda.Runtime.NODEJS_20_X,
+  "nodejs22.x": lambda.Runtime.NODEJS_22_X,
+  "nodejs24.x": lambda.Runtime.NODEJS_24_X,
   "provided.al2023": lambda.Runtime.PROVIDED_AL2023,
 };
 

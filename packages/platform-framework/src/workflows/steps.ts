@@ -46,7 +46,7 @@ export function standardsCheckStep(): Step {
 export function cdkSetupSteps(): Step[] {
   return [
     new Step({ name: "Set up pnpm", uses: "pnpm/action-setup@v4" }),
-    new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "20", cache: "pnpm" } }),
+    new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "24", cache: "pnpm" } }),
     new Step({ name: "Install infra dependencies", run: "pnpm install --frozen-lockfile" }),
   ];
 }

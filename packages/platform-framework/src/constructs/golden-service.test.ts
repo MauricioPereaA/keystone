@@ -62,4 +62,11 @@ describe("GoldenService construct", () => {
     const errors = Annotations.fromStack(stack).findError("*", Match.stringLikeRegexp("AwsSolutions-.*"));
     expect(errors).toHaveLength(0);
   });
+
+  it("targets an AWS-supported, non-EOL Lambda runtime (nodejs24.x)", () => {
+    const app = new App();
+    const stack = new Stack(app, "NodeStack", { env: { account: "123456789012", region: "us-east-1" } });
+    new GoldenService(stack, "Svc", { serviceName: "svc", env: "sandbox", runtime: "nodejs24.x" });
+    Template.fromStack(stack).hasResourceProperties("AWS::Lambda::Function", { Runtime: "nodejs24.x" });
+  });
 });
