@@ -23,7 +23,7 @@ from devex.conventions import load_conventions
 from devex.dora import DEFAULT_ENV, compute_metrics, parse_events
 from devex.exit_codes import ExitCode
 from devex.schema import ConventionsError
-from devex.settings import telemetry_stream_path
+from devex.settings import ci_branch, telemetry_stream_path
 from devex.validators import Result, validate_branch, validate_commit, validate_pr_title
 from devex.work_id import extract_work_id
 
@@ -55,6 +55,25 @@ def _git(*args: str) -> str:
     return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
 
 
+def _resolve_branch() -> str:
+    """Branch to validate: CI context first (PR source / pushed ref), else local git.
+
+    On a `pull_request` the checkout is a detached merge ref, so the local branch
+    name is "HEAD"; GITHUB_HEAD_REF carries the real source branch.
+    """
+    return ci_branch() or _git("rev-parse", "--abbrev-ref", "HEAD") or "HEAD"
+
+
+def _resolve_commit_subject() -> str:
+    """Subject of the latest non-merge commit ("" if none is reachable).
+
+    `--no-merges` skips the synthetic merge commit a `pull_request` checkout lands
+    on; on a shallow merge ref where no real commit is present, this is empty and
+    the caller skips the commit check rather than failing on the merge subject.
+    """
+    return _git("log", "-1", "--no-merges", "--pretty=%s")
+
+
 @app.command()
 def version() -> None:
     """Print the CLI version."""
@@ -62,11 +81,17 @@ def version() -> None:
 
 
 def _standards_results() -> list[Result]:
-    """Validate the current branch + last commit against conventions.json."""
-    return [
-        validate_branch(_git("rev-parse", "--abbrev-ref", "HEAD") or "HEAD"),
-        validate_commit(_git("log", "-1", "--pretty=%s") or ""),
-    ]
+    """Validate the current branch + last commit against conventions.json (CI-aware)."""
+    results = [validate_branch(_resolve_branch())]
+    subject = _resolve_commit_subject()
+    if not subject and ci_branch() is not None:
+        # Detached/shallow CI checkout with no real commit reachable: the branch
+        # already carries the Work ID, and local hooks validate commits at write
+        # time — skip rather than fail on the synthetic merge subject.
+        results.append(Result(True, "commit check skipped (no non-merge commit in CI checkout)"))
+    else:
+        results.append(validate_commit(subject))
+    return results
 
 
 @app.command(name="standards-check")
@@ -272,7 +297,7 @@ def workid(
     ),
 ) -> None:
     """Print the Work ID for the current change (generated CI uses it to stamp telemetry)."""
-    candidates = [ref] if ref else [_git("rev-parse", "--abbrev-ref", "HEAD"), _git("log", "-1", "--pretty=%s")]
+    candidates = [ref] if ref else [_resolve_branch(), _resolve_commit_subject()]
     for text in candidates:
         work_id = extract_work_id(text or "")
         if work_id:

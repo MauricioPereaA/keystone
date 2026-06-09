@@ -15,6 +15,16 @@ from pathlib import Path
 CONVENTIONS_PATH_ENV = "KEYSTONE_CONVENTIONS_PATH"
 #: Env var pointing at the NDJSON telemetry stream that `devex dora` reads.
 TELEMETRY_STREAM_ENV = "KEYSTONE_TELEMETRY_STREAM"
+#: GitHub Actions context vars. On a pull_request the runner checks out a detached
+#: merge ref, so the source branch lives in GITHUB_HEAD_REF; on push it is
+#: GITHUB_REF_NAME. Reading them keeps standards-check / workid correct in CI.
+CI_HEAD_REF_ENV = "GITHUB_HEAD_REF"
+CI_REF_NAME_ENV = "GITHUB_REF_NAME"
+
+
+def ci_branch() -> str | None:
+    """Branch name from the CI context (PR source, then pushed ref), or None locally."""
+    return os.environ.get(CI_HEAD_REF_ENV) or os.environ.get(CI_REF_NAME_ENV) or None
 
 
 def conventions_path() -> Path | None:
