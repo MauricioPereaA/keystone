@@ -59,6 +59,43 @@ def test_workid_fails_when_no_work_id_present() -> None:
     assert result.exit_code == 1
 
 
+def _fake_pr_checkout_git(*args: str) -> str:
+    """Simulate a pull_request runner checkout: detached merge ref, no real commit."""
+    if "--abbrev-ref" in args:
+        return "HEAD"
+    return ""  # `git log -1 --no-merges` finds nothing on a shallow merge ref
+
+
+def test_standards_check_uses_ci_head_ref_on_pr(monkeypatch) -> None:
+    # Regression (FIN-312): the gate must read GITHUB_HEAD_REF, not the detached
+    # "HEAD", and skip the unreachable commit instead of failing on noise.
+    monkeypatch.setenv("GITHUB_HEAD_REF", "feature/FIN-42-ci-aware")
+    monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_checkout_git)
+    result = runner.invoke(app, ["standards-check"])
+    assert result.exit_code == 0
+    assert "skipped" in result.stdout  # commit check visibly skipped, not silent
+
+
+def test_standards_check_rejects_bad_branch_from_ci_context(monkeypatch) -> None:
+    monkeypatch.setenv("GITHUB_HEAD_REF", "garbage-no-work-id")
+    monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_checkout_git)
+    result = runner.invoke(app, ["standards-check"])
+    assert result.exit_code == 1
+
+
+def test_workid_resolves_from_ci_head_ref(monkeypatch) -> None:
+    # The generated deploy job stamps telemetry with `devex workid`; in CI it must
+    # resolve from GITHUB_HEAD_REF, not the detached merge checkout.
+    monkeypatch.setenv("GITHUB_HEAD_REF", "feature/FIN-77-thing")
+    monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_checkout_git)
+    result = runner.invoke(app, ["workid"])
+    assert result.exit_code == 0
+    assert "FIN-77" in result.stdout
+
+
 def test_dora_reports_metrics_from_a_stream(tmp_path) -> None:
     event = json.dumps(
         {
