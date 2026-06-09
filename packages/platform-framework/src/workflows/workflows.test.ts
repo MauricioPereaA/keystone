@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SCHEMA_VERSION } from "../telemetry/index.js";
 import { generateIntegrationPipeline } from "./integration-pipeline.js";
@@ -78,5 +79,17 @@ describe("Integration pipeline generator", () => {
     const wf = generateIntegrationPipeline({ repo: "acme/svc", language: "python" });
     const runs = (jobsOf(wf)["emit-metrics"].steps ?? []).map((s) => s.run ?? "");
     expect(runs.some((r) => /devex dora/.test(r))).toBe(true);
+  });
+});
+
+describe("telemetry emit step ↔ conventions contract", () => {
+  it("emits every conventions.json telemetry.requiredField (audit/comparability guarantee)", () => {
+    const conventions = JSON.parse(
+      readFileSync(new URL("../../../../conventions/conventions.json", import.meta.url), "utf8"),
+    ) as { telemetry: { requiredFields: string[] } };
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "acme/svc", language: "python" }));
+    for (const field of conventions.telemetry.requiredFields) {
+      expect(yaml).toContain(`--arg ${field} `);
+    }
   });
 });

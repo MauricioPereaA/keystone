@@ -18,6 +18,7 @@ from rich.console import Console
 from rich.table import Table
 
 from devex import __version__, hooks, pipeline, scaffold
+from devex._log import log
 from devex.conventions import load_conventions
 from devex.dora import DEFAULT_ENV, compute_metrics, parse_events
 from devex.exit_codes import ExitCode
@@ -33,8 +34,8 @@ for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         try:
             _stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-        except (ValueError, OSError):
-            pass
+        except (ValueError, OSError) as exc:
+            log.warning("stdout.reconfigure_failed", error=exc)
 
 app = typer.Typer(help="Keystone devex — the developer interface to the platform.", no_args_is_help=True)
 console = Console()
@@ -101,7 +102,8 @@ def _generate_workflows(target: Path) -> bool:
             text=True,
             timeout=60,
         )
-    except (FileNotFoundError, OSError, subprocess.SubprocessError):
+    except (FileNotFoundError, OSError, subprocess.SubprocessError) as exc:
+        log.warning("workflows.generate_skipped", error=exc)
         return False
     return proc.returncode == 0
 

@@ -36,16 +36,20 @@ describe("GoldenService construct", () => {
     });
   });
 
-  it("tags everything project=keystone + service + env (cost attribution)", () => {
+  it("tags every resource project=keystone + service + env (cost attribution)", () => {
     const t = Template.fromStack(buildStack());
-    // Assert each tag independently — arrayWith matches an in-order subsequence,
-    // and CDK emits tags sorted alphabetically.
-    for (const tag of [
+    const tags = [
       { Key: "project", Value: "keystone" },
       { Key: "service", Value: "transactionify" },
       { Key: "env", Value: "sandbox" },
-    ]) {
-      t.hasResourceProperties("AWS::Lambda::Function", { Tags: Match.arrayWith([tag]) });
+    ];
+    // Cover the cost-leak-prone resources, not just the Lambda. Assert each tag
+    // independently — arrayWith matches an in-order subsequence, and CDK emits
+    // tags sorted alphabetically.
+    for (const resource of ["AWS::Lambda::Function", "AWS::Logs::LogGroup", "AWS::ApiGateway::RestApi"]) {
+      for (const tag of tags) {
+        t.hasResourceProperties(resource, { Tags: Match.arrayWith([tag]) });
+      }
     }
   });
 
@@ -56,11 +60,12 @@ describe("GoldenService construct", () => {
     });
   });
 
-  it("ships cdk-nag (AwsSolutionsChecks) clean — a passing baseline for consumers", () => {
+  it("ships cdk-nag (AwsSolutionsChecks) clean — no errors AND no warnings", () => {
     const stack = buildStack();
     Aspects.of(stack).add(new AwsSolutionsChecks({ verbose: true }));
-    const errors = Annotations.fromStack(stack).findError("*", Match.stringLikeRegexp("AwsSolutions-.*"));
-    expect(errors).toHaveLength(0);
+    const nag = Annotations.fromStack(stack);
+    expect(nag.findError("*", Match.stringLikeRegexp("AwsSolutions-.*"))).toHaveLength(0);
+    expect(nag.findWarning("*", Match.stringLikeRegexp("AwsSolutions-.*"))).toHaveLength(0);
   });
 
   it("targets an AWS-supported, non-EOL Lambda runtime (nodejs24.x)", () => {

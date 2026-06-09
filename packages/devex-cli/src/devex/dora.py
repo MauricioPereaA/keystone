@@ -13,10 +13,10 @@ import statistics
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Deployment event vocabulary — mirrors conventions.json telemetry.events and the
-# TS DeploymentEvent union (a test guards that these stay a subset of the source).
+# TS DeploymentEvent union (a test guards that these stay in parity with the source).
 EVENT_STARTED = "deployment.started"
 EVENT_SUCCEEDED = "deployment.succeeded"
 EVENT_FAILED = "deployment.failed"
@@ -46,8 +46,11 @@ class DoraMetrics:
 
 
 def _parse_ts(value: str) -> datetime:
-    # Accept the trailing "Z" that ISO-8601 / the framework emits.
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    # Accept the trailing "Z" that ISO-8601 / the framework emits, and normalize a
+    # naive value to UTC so naive and aware events never collide in arithmetic
+    # (otherwise a single hand-written/legacy line crashes the whole DORA report).
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
 
 
 def parse_events(lines: Iterable[str]) -> tuple[list[DoraEvent], int]:
