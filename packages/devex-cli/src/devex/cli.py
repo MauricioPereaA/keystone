@@ -1,8 +1,9 @@
 """devex CLI entrypoint.
 
-PoC scope: `standards-check` is fully wired (the shift-left demo). `init`,
-`pr`, `hooks`, and `dora` are scaffolded stubs with the command surface in
-place — implement against .kiro/specs/devex-cli/tasks.md.
+Command surface for the Keystone devex CLI. Commands are thin: parse args, call
+pure logic (validators / conventions), render via Rich. A group callback
+validates conventions.json up-front so every command fails fast on a bad source.
+See .kiro/specs/devex-cli/tasks.md for the roadmap.
 """
 
 from __future__ import annotations
@@ -14,6 +15,9 @@ import typer
 from rich.console import Console
 
 from devex import __version__
+from devex.conventions import load_conventions
+from devex.exit_codes import ExitCode
+from devex.schema import ConventionsError
 from devex.validators import validate_branch, validate_commit, validate_pr_title
 
 # Ensure UTF-8 output so Rich status glyphs (✓ / ✗) render on legacy Windows
@@ -28,6 +32,16 @@ for _stream in (sys.stdout, sys.stderr):
 
 app = typer.Typer(help="Keystone devex — the developer interface to the platform.", no_args_is_help=True)
 console = Console()
+
+
+@app.callback()
+def _main() -> None:
+    """Validate the conventions source up-front; a bad file fails fast (exit CONFIG)."""
+    try:
+        load_conventions()
+    except ConventionsError as exc:
+        console.print(f"[red]✗[/] invalid conventions.json: {exc}")
+        raise typer.Exit(code=ExitCode.CONFIG) from None
 
 
 def _git(*args: str) -> str:
@@ -50,7 +64,7 @@ def standards_check() -> None:
     for r in checks:
         console.print(("[green]✓[/] " if r.ok else "[red]✗[/] ") + r.message)
     if not all(r.ok for r in checks):
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=ExitCode.VALIDATION)
 
 
 @app.command(name="check-pr-title")
@@ -63,7 +77,7 @@ def check_pr_title(title: str = typer.Argument(..., help="The pull-request title
     r = validate_pr_title(title)
     console.print(("[green]✓[/] " if r.ok else "[red]✗[/] ") + r.message)
     if not r.ok:
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=ExitCode.VALIDATION)
 
 
 @app.command()
