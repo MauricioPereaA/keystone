@@ -1,0 +1,21 @@
+name: keystone-local
+
+# Local AWS emulator for the offline demo (challenge bonus A). Lets you stand up
+# the GoldenService stack and exercise the DORA telemetry sink with NO real AWS
+# account and NO cost. Bring it up with `make localstack-up`; the full offline
+# demo loop is documented in docs/runbooks/local-dev-env.md.
+
+services:
+  localstack:
+    image: localstack/localstack:latest # pin a version (e.g. :4.0) for reproducible runs
+    container_name: keystone-localstack
+    ports:
+      - "4566:4566" # LocalStack edge gateway — all AWS services on one port
+    environment:
+      # Only the services the GoldenService construct + CDK actually use.
+      - SERVICES=lambda,apigateway,logs,s3,iam,sts,cloudformation,cloudwatch
+      - DEBUG=0
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./.localstack}:/var/lib/localstack"
+      # LocalStack runs Lambda functions as sibling containers via the host daemon.
+      - "/var/run/docker.sock:/var/run/docker.sock"

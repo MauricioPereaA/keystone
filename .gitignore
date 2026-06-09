@@ -30,6 +30,10 @@ node_modules/
 cdk.out/
 *.cdk.staging/
 
+# ── Local dev env (LocalStack offline demo) ──────────────────────
+.localstack/
+telemetry.ndjson
+
 # ── OS / editor ──────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

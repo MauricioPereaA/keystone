@@ -80,6 +80,15 @@ build: ## Build the framework (dist/) — the CLI builds at install time
 protect-main: ## Apply the main-branch ruleset (PR + 2 reviewers); needs a public repo or GitHub Pro
 	bash scripts/apply-branch-protection.sh
 
+# ───── Local dev env (offline demo via LocalStack) ────────────────────
+.PHONY: localstack-up
+localstack-up: ## Start LocalStack (local AWS emulator) — see docs/runbooks/local-dev-env.md
+	docker compose up -d localstack
+
+.PHONY: localstack-down
+localstack-down: ## Stop LocalStack and remove its volume
+	docker compose down -v
+
 # ───── Utilities ──────────────────────────────────────────────────────
 .PHONY: clean
 clean: ## Remove generated artifacts
