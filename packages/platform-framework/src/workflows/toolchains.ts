@@ -40,6 +40,7 @@ export const LANGUAGE_TOOLCHAINS: Record<Language, Toolchain> = {
           "  uv sync --extra dev",
           "else",
           "  uv venv",
+          "  # uv pip install auto-targets the .venv just created — no activation needed (uv != pip).",
           "  for req in requirements.txt requirements-dev.txt; do",
           '    [ -f "$req" ] && uv pip install -r "$req"',
           "  done",
