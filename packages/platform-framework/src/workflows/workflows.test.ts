@@ -25,7 +25,7 @@ describe("PR pipeline generator", () => {
     const names = (jobsOf(wf)["small-tests"].steps ?? []).map((s) => s.name);
     expect(names).toContain("Validate conventions & resolve Work ID (devex)");
     expect(names).toContain("Unit + property-based tests");
-    expect(names).toContain("API contract tests");
+    expect(names).toContain("API contract: validate OpenAPI schema");
   });
 
   it("injects a telemetry step into EVERY deploy job (comparability guarantee)", () => {
@@ -69,6 +69,13 @@ describe("PR pipeline generator", () => {
     expect(yaml).toContain("nothing to install");
   });
 
+  it("pre-deploy contract step validates the OpenAPI schema server-less (no running service needed)", () => {
+    const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
+    // schema validation, not live fuzzing — schemathesis needs a URL it can't have pre-deploy
+    expect(yaml).toContain("openapi-spec-validator");
+    expect(yaml).not.toContain("schemathesis"); // fuzzing belongs in the deploy stage
+  });
+
   it("api-contract step auto-detects the service's OpenAPI spec at runtime by default", () => {
     const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
     expect(yaml).toContain("for candidate in openapi.yaml openapi.yml openapi.json");
@@ -77,7 +84,7 @@ describe("PR pipeline generator", () => {
 
   it("apiSpec option pins the contract step to the service's real spec", () => {
     const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python", apiSpec: "spec/api.yaml" }));
-    expect(yaml).toContain('schemathesis run --checks all "spec/api.yaml"');
+    expect(yaml).toContain('openapi-spec-validator "spec/api.yaml"');
     expect(yaml).toContain("does not exist in the repo"); // pinned spec still fail-fast checked
     expect(yaml).not.toContain("for candidate in"); // no detection loop when pinned
   });
@@ -129,7 +136,7 @@ describe("Integration pipeline generator", () => {
 
   it("threads apiSpec into its small-tests job too (mutation guard for the production gate)", () => {
     const yaml = workflowToYaml(generateIntegrationPipeline({ repo: "x", language: "python", apiSpec: "spec/api.yaml" }));
-    expect(yaml).toContain('schemathesis run --checks all "spec/api.yaml"');
+    expect(yaml).toContain('openapi-spec-validator "spec/api.yaml"');
   });
 });
 

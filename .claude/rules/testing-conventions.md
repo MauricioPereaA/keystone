@@ -63,6 +63,8 @@ def test_typer_app_exists(): assert app is not None
 
 The PR pipeline's small-tests stage requires **unit + property-based + API-contract**. For services exposing the REST API Gateway:
 
-- **Contract-test the OpenAPI spec**, don't hand-write request assertions. Recommended: `schemathesis` (Python — generates cases from the OpenAPI schema, pairs naturally with Hypothesis) or a Pact-style consumer/provider check for cross-service contracts.
-- The contract test is **generated/selected by the framework's workflow generator per language**, so "API-contract" means the same thing for every team (the `/new-language` skill adds the mapping).
-- A contract test failing on a breaking API change is the point — treat it as a red gate, not a flake.
+- **Contract checking is split across the pipeline because the two halves need different things** (a real adoption — the Transactionify case study — surfaced that a single pre-deploy `schemathesis run` is unsatisfiable: it needs a live URL the service doesn't have yet):
+  - **Pre-deploy (small-tests): validate the OpenAPI schema** — server-less, fast, catches a broken/invalid spec before anything is built. The python toolchain runs `openapi-spec-validator` (brought by `uvx`, so the service adds nothing to its deps); it auto-detects `openapi.yaml|yml|json` at the repo root or honors `apiSpec` in `keystone.json`.
+  - **Post-deploy (deploy stage): fuzz the running service** — `schemathesis` generates cases from the same OpenAPI schema and runs them against the **deployed sandbox URL**, where there is an API to hit. (Lands with the AWS deploy stage.)
+- The contract step is **generated/selected by the framework's workflow generator per language**, so "API-contract" means the same thing for every team (the `/new-language` skill adds the mapping).
+- A contract check failing on a breaking API change is the point — treat it as a red gate, not a flake.

@@ -61,7 +61,7 @@ This drops in:
 |---|---|---|
 | `service` | yes | Service name — stamped into workflows and telemetry. |
 | `language` | yes | `python` \| `typescript` \| `go` \| `clojure` — selects the small-tests toolchain. |
-| `apiSpec` | no | Path to the OpenAPI spec for the API-contract step. Omitted = the generated step auto-detects `openapi.yaml\|yml\|json` at the repo root. Honored by the python toolchain (schemathesis); the other toolchains run a project script instead. |
+| `apiSpec` | no | Path to the OpenAPI spec for the API-contract step. Omitted = the generated step auto-detects `openapi.yaml\|yml\|json` at the repo root. Honored by the python toolchain (pre-deploy OpenAPI schema validation); the other toolchains run a project script instead. |
 
 Config only takes effect **through generation**: after editing `keystone.json`,
 re-run `pnpm generate:workflows` and commit the regenerated workflows.
