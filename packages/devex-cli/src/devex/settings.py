@@ -27,6 +27,17 @@ def ci_branch() -> str | None:
     return os.environ.get(CI_HEAD_REF_ENV) or os.environ.get(CI_REF_NAME_ENV) or None
 
 
+def is_ci_pull_request() -> bool:
+    """True when running on a GitHub `pull_request` event.
+
+    GITHUB_HEAD_REF is set only for pull_request events; the runner then checks
+    out a synthetic, shallow merge ref where the real change commit isn't
+    reliably reachable (its parents are grafted away). Callers skip commit-message
+    validation there — the branch carries the Work ID.
+    """
+    return bool(os.environ.get(CI_HEAD_REF_ENV))
+
+
 def conventions_path() -> Path | None:
     """Return the conventions.json override path, or None to use the bundled copy.
 

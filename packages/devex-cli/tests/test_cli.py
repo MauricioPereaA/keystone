@@ -59,28 +59,56 @@ def test_workid_fails_when_no_work_id_present() -> None:
     assert result.exit_code == 1
 
 
-def _fake_pr_checkout_git(*args: str) -> str:
-    """Simulate a pull_request runner checkout: detached merge ref, no real commit."""
+def _fake_pr_merge_ref_git(*args: str) -> str:
+    """Simulate a pull_request runner checkout: detached, shallow merge ref.
+
+    On a depth-1 merge ref git grafts the parents away, so the merge looks
+    parentless: `--abbrev-ref HEAD` is "HEAD" and `git log` returns the synthetic
+    merge subject — which is exactly what must NOT fail the gate.
+    """
     if "--abbrev-ref" in args:
         return "HEAD"
-    return ""  # `git log -1 --no-merges` finds nothing on a shallow merge ref
+    return "Merge 99b90a1 into a0d9b5e"  # the merge subject git surfaces in CI
 
 
 def test_standards_check_uses_ci_head_ref_on_pr(monkeypatch) -> None:
-    # Regression (FIN-312): the gate must read GITHUB_HEAD_REF, not the detached
-    # "HEAD", and skip the unreachable commit instead of failing on noise.
+    # Regression (FIN-312/313): read GITHUB_HEAD_REF for the branch, and skip the
+    # commit check on a pull_request checkout instead of failing on the merge.
     monkeypatch.setenv("GITHUB_HEAD_REF", "feature/FIN-42-ci-aware")
     monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
-    monkeypatch.setattr("devex.cli._git", _fake_pr_checkout_git)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_merge_ref_git)
     result = runner.invoke(app, ["standards-check"])
     assert result.exit_code == 0
     assert "skipped" in result.stdout  # commit check visibly skipped, not silent
 
 
+def test_standards_check_skips_commit_even_when_git_returns_merge(monkeypatch) -> None:
+    # FIN-313 root cause: on a shallow merge ref git reports 0 parents, so neither
+    # --no-merges nor parent-count can detect the merge — only the PR env can. The
+    # gate must pass on a valid branch despite git surfacing the merge subject.
+    monkeypatch.setenv("GITHUB_HEAD_REF", "feature/TX-1-adopt-keystone-golden-path")
+    monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_merge_ref_git)
+    result = runner.invoke(app, ["standards-check"])
+    assert result.exit_code == 0
+
+
+def test_standards_check_validates_commit_on_push(monkeypatch) -> None:
+    # On push (no GITHUB_HEAD_REF) the checkout is the real commit — validate it.
+    monkeypatch.delenv("GITHUB_HEAD_REF", raising=False)
+    monkeypatch.setenv("GITHUB_REF_NAME", "main")
+    monkeypatch.setattr(
+        "devex.cli._git",
+        lambda *a: "main" if "--abbrev-ref" in a else "not a conventional commit",
+    )
+    result = runner.invoke(app, ["standards-check"])
+    assert result.exit_code == 1  # branch "main" is protected (ok), commit is invalid
+
+
 def test_standards_check_rejects_bad_branch_from_ci_context(monkeypatch) -> None:
     monkeypatch.setenv("GITHUB_HEAD_REF", "garbage-no-work-id")
     monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
-    monkeypatch.setattr("devex.cli._git", _fake_pr_checkout_git)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_merge_ref_git)
     result = runner.invoke(app, ["standards-check"])
     assert result.exit_code == 1
 
@@ -90,7 +118,7 @@ def test_workid_resolves_from_ci_head_ref(monkeypatch) -> None:
     # resolve from GITHUB_HEAD_REF, not the detached merge checkout.
     monkeypatch.setenv("GITHUB_HEAD_REF", "feature/FIN-77-thing")
     monkeypatch.delenv("GITHUB_REF_NAME", raising=False)
-    monkeypatch.setattr("devex.cli._git", _fake_pr_checkout_git)
+    monkeypatch.setattr("devex.cli._git", _fake_pr_merge_ref_git)
     result = runner.invoke(app, ["workid"])
     assert result.exit_code == 0
     assert "FIN-77" in result.stdout

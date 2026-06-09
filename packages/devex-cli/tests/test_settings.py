@@ -36,3 +36,12 @@ def test_ci_branch_prefers_head_ref_then_ref_name(monkeypatch) -> None:
     monkeypatch.delenv(settings.CI_HEAD_REF_ENV, raising=False)
     monkeypatch.setenv(settings.CI_REF_NAME_ENV, "main")
     assert settings.ci_branch() == "main"
+
+
+def test_is_ci_pull_request_only_when_head_ref_set(monkeypatch) -> None:
+    # GITHUB_HEAD_REF is set only on pull_request events, so it is the signal.
+    monkeypatch.setenv(settings.CI_HEAD_REF_ENV, "feature/FIN-1-x")
+    assert settings.is_ci_pull_request() is True
+    monkeypatch.delenv(settings.CI_HEAD_REF_ENV, raising=False)
+    monkeypatch.setenv(settings.CI_REF_NAME_ENV, "main")  # push, not a PR
+    assert settings.is_ci_pull_request() is False
