@@ -61,7 +61,7 @@ The **core + bonuses are built, tested, and dogfooded**:
 | ≥1 shared artifact: reusable CDK construct (Option A) | `…/constructs/GoldenService` (Lambda + REST API GW + retention LogGroups + tags + cdk-nag clean) | ✅ |
 | Shared pipeline stages / workflow defs / deploy patterns | `…/workflows/` (per-language toolchains, OIDC, telemetry) | ✅ |
 | Shared telemetry hooks | `…/telemetry/` (contract ✅) + injected `emitTelemetryStep` in every deploy job | ✅ |
-| Distribution: pnpm · git install · multi-repo · reusable types | `package.json` exports, `dist/` + `.d.ts` | 🟡 (build ✅; consumer Git-install verification pending Phase 3) |
+| Distribution: pnpm · git install · multi-repo · reusable types | `package.json` exports + `prepare` (builds `dist/`+`.d.ts` on install); `pnpm pack` verified | ✅ |
 
 ## 5. Shared Engineering Conventions & Git Governance
 
