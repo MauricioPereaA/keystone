@@ -82,7 +82,7 @@
 
 | Bonus | Where | Status |
 |---|---|---|
-| A — Local dev env (Docker Compose / LocalStack / Testcontainers) | — | ⬜ |
+| A — Local dev env (Docker Compose / LocalStack / Testcontainers) | `docker-compose.yml` (LocalStack) + `make localstack-up/down` + `docs/runbooks/local-dev-env.md` | ✅ |
 | B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅ + `devex hooks install` (native pre-commit/pre-push) | ✅ |
 | C — AI-assisted PR reviews (Amazon Q) | — | ⬜ |
 | D — Integration Pipeline PoC (working impl) | `…/workflows/` | ⬜ |
