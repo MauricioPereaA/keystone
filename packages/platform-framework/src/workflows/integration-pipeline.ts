@@ -17,7 +17,7 @@ export function generateIntegrationPipeline(options: IntegrationPipelineOptions)
     on: { push: { branches: ["main"] } },
   });
 
-  const tests = smallTestsJob(options.language);
+  const tests = smallTestsJob(options.language, { apiSpec: options.apiSpec });
   workflow.addJob(tests);
 
   let previous = tests;

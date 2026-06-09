@@ -17,7 +17,7 @@ export function generatePrPipeline(options: PrPipelineOptions): Workflow {
     on: { pull_request: { types: ["opened", "synchronize", "reopened"] } },
   });
 
-  const tests = smallTestsJob(options.language);
+  const tests = smallTestsJob(options.language, { apiSpec: options.apiSpec });
   workflow.addJob(tests);
 
   let previous = tests;
