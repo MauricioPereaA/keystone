@@ -231,12 +231,28 @@ def pipeline_run(
         console.print(("  [green]✓[/] " if r.ok else "  [red]✗[/] ") + r.message)
     gate_ok = all(r.ok for r in results)
 
-    # Stage 2 — small-tests.
+    # Stage 2 — dependency setup, mirroring the CI toolchain's setup step. Without
+    # it a stale local venv could pass what a fresh CI sync would fail.
+    setup_ok = True
+    for setup_command in pipeline.local_setup_commands(language, Path.cwd()):
+        console.print(f"  setup: {' '.join(setup_command)}")
+        if dry_run:
+            continue
+        try:
+            if subprocess.run(setup_command, timeout=600).returncode != 0:
+                console.print("  [red]✗[/] dependency setup failed")
+                setup_ok = False
+                break
+        except (FileNotFoundError, OSError, subprocess.SubprocessError) as exc:
+            console.print(f"  [red]✗[/] could not run setup: {exc}")
+            raise typer.Exit(code=ExitCode.CONFIG) from None
+
+    # Stage 3 — small-tests.
     if command is None:
         console.print(f"  [yellow]·[/] no local test command mapped for '{language}'")
     else:
         console.print(f"  small-tests: {' '.join(command)}")
-    if not dry_run and command is not None:
+    if not dry_run and command is not None and setup_ok:
         try:
             tests_ok = subprocess.run(command, timeout=600).returncode == 0
         except (FileNotFoundError, OSError, subprocess.SubprocessError) as exc:
@@ -245,7 +261,7 @@ def pipeline_run(
     else:
         tests_ok = True
 
-    if not gate_ok or not tests_ok:
+    if not gate_ok or not setup_ok or not tests_ok:
         raise typer.Exit(code=ExitCode.VALIDATION)
 
 

@@ -69,11 +69,13 @@ def _generate_wrapper() -> str:
         "  generatePrPipeline,\n"
         "  workflowToYaml,\n"
         '} from "@keystone/platform/workflows";\n\n'
-        'const { service, language } = JSON.parse(readFileSync("keystone.json", "utf8"));\n'
+        "// apiSpec is optional — when absent the generated contract step auto-detects\n"
+        "// openapi.yaml|yml|json at the repo root at runtime.\n"
+        'const { service, language, apiSpec } = JSON.parse(readFileSync("keystone.json", "utf8"));\n'
         'mkdirSync(".github/workflows", { recursive: true });\n'
         "for (const wf of [\n"
-        "  generatePrPipeline({ repo: service, language }),\n"
-        "  generateIntegrationPipeline({ repo: service, language }),\n"
+        "  generatePrPipeline({ repo: service, language, apiSpec }),\n"
+        "  generateIntegrationPipeline({ repo: service, language, apiSpec }),\n"
         "]) {\n"
         "  writeFileSync(`.github/workflows/${wf.filename}.yml`, workflowToYaml(wf), \"utf8\");\n"
         "  process.stdout.write(`generated .github/workflows/${wf.filename}.yml\\n`);\n"
