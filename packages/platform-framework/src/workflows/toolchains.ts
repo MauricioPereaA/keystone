@@ -42,7 +42,7 @@ export const LANGUAGE_TOOLCHAINS: Record<Language, Toolchain> = {
     label: "TypeScript",
     setup: () => [
       new Step({ name: "Set up pnpm", uses: "pnpm/action-setup@v4" }),
-      new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "20", cache: "pnpm" } }),
+      new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "24", cache: "pnpm" } }),
       new Step({ name: "Install dependencies", run: "pnpm install --frozen-lockfile" }),
     ],
     smallTests: () => [
