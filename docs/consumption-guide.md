@@ -53,6 +53,19 @@ This drops in:
 - **git hooks** (run `devex hooks install` if not auto-installed),
 - a reference to the shared `conventions.json` (the CLI bundles its own copy; you don't vendor it).
 
+### `keystone.json` — the service's golden-path config
+
+`devex init`/`adopt` writes it; the workflow generator reads it:
+
+| Field | Required | Meaning |
+|---|---|---|
+| `service` | yes | Service name — stamped into workflows and telemetry. |
+| `language` | yes | `python` \| `typescript` \| `go` \| `clojure` — selects the small-tests toolchain. |
+| `apiSpec` | no | Path to the OpenAPI spec for the API-contract step. Omitted = the generated step auto-detects `openapi.yaml\|yml\|json` at the repo root. Honored by the python toolchain (schemathesis); the other toolchains run a project script instead. |
+
+Config only takes effect **through generation**: after editing `keystone.json`,
+re-run `pnpm generate:workflows` and commit the regenerated workflows.
+
 ### One-time AWS auth (per repo)
 
 Set the two repo **Variables** (not secrets) so generated deploy jobs can assume
