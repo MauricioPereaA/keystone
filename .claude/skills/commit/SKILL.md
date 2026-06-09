@@ -70,14 +70,14 @@ Atomic, gated, conventional commits are the substrate everything else depends on
 
 ### Good message
 ```
-feat(api): add bulk-import endpoint
+feat(api): FIN-123 add payment validation endpoint
 
-POST /api/records/import accepts a multipart CSV and bulk-creates
-records under the requested project. Validates MIME, size, row count,
-and per-row data; returns a created/skipped breakdown. Tenant-scoped
-via get_scoped(Project, …).
+POST /api/payments/validate accepts a payment payload and returns a
+field-level validation result. Validates schema, amount bounds, and
+currency; emits the standard DoraEvent audit record. Covered by unit
++ property-based tests.
 
-Closes TICKET-12.
+Closes FIN-123.
 ```
 
 ### Bad message

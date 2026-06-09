@@ -14,9 +14,9 @@
 
 | # | Deliverable | Where | Status |
 |---|---|---|---|
-| A | Python CLI, `uv tool install git+…#subdirectory=` | `packages/devex-cli/` (`pyproject.toml`, self-contained), `README.md` | 🟡 packaging done + `standards-check` works; verify install after first push |
-| B | TS Framework, `pnpm add github:…#path:` | `packages/platform-framework/` (`package.json` subpath exports) | 🟡 telemetry done; workflow/construct generators are stubs |
-| C | Unit tests (CLI + framework) | `packages/devex-cli/tests/` (10: unit+PBT), `…/telemetry/telemetry.test.ts` (3) | ✅ |
+| A | Python CLI, `uv tool install git+…#subdirectory=` | `packages/devex-cli/` (`pyproject.toml`, self-contained), `README.md` | 🟡 packaging + all commands implemented; verify clean-machine install |
+| B | TS Framework, `pnpm add github:…#path:` | `packages/platform-framework/` (`package.json` subpath exports) | ✅ telemetry + workflow + construct generators implemented (rows 49–52) |
+| C | Unit tests (CLI + framework) | `packages/devex-cli/tests/` (71: unit + PBT + CLI smokes), framework `*.test.ts` (22: telemetry + workflows + CDK) | ✅ |
 | D | DORA telemetry: collection · standardization · reporting | contract `…/src/telemetry/`; collection = workflow `emitTelemetryStep`; reporting = `devex dora` | ✅ contract + collection (emitTelemetryStep) + reporting (`devex dora`) |
 | E | README (architecture · install · usage · dev workflow) | `README.md` | ✅ |
 | F | Consumption Guide (install · configure · extend · upgrade) | `docs/consumption-guide.md` | ✅ |
@@ -85,7 +85,7 @@
 | A — Local dev env (Docker Compose / LocalStack / Testcontainers) | `docker-compose.yml` (LocalStack) + `make localstack-up/down` + `docs/runbooks/local-dev-env.md` | ✅ |
 | B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅ + `devex hooks install` (native pre-commit/pre-push) | ✅ |
 | C — AI-assisted PR reviews (Amazon Q) | — | ⬜ |
-| D — Integration Pipeline PoC (working impl) | `…/workflows/` | ⬜ |
+| D — Integration Pipeline PoC (working impl) | `…/workflows/generateIntegrationPipeline` (+ snapshot/structure tests) | 🟡 generator ✅; live end-to-end run pending |
 | E — Kiro evidence (steering · specs · AI context) | `.kiro/steering/`, `.kiro/specs/` | ✅ |
 
 ## 9. Evaluation Criteria (how the work is judged)
@@ -103,7 +103,7 @@
 | Point | Prep / where | Status |
 |---|---|---|
 | Architecture deep dive | thesis "standardize the source, not the metric"; CLI↔framework via `conventions.json`; ADRs | ✅ ready |
-| Live demo | `init` → bad branch fails `standards-check` → fix → push → workflow → `devex dora` | 🟡 needs implemented commands |
+| Live demo | `init` → bad branch fails `standards-check` → fix → push → workflow → `devex dora` | 🟡 all commands implemented; live end-to-end run pending |
 | Installation walkthrough | `uv tool install …#subdirectory=` + `pnpm add …#path:` (test on clean machine) | 🟡 verify after push |
 | Integration case study (Transactionify fork) | fork → `pnpm add @keystone/platform` → `devex adopt` → telemetry | ⬜ prepare before interview |
 

@@ -7,7 +7,7 @@ The developer-facing interface to the Keystone platform. Python, packaged with `
 ```bash
 uv tool install "git+https://github.com/MauricioPereaA/keystone#subdirectory=packages/devex-cli"
 # pin a version:
-uv tool install "git+https://github.com/MauricioPereaA/keystone@v0.1.0#subdirectory=packages/devex-cli"
+uv tool install "git+https://github.com/MauricioPereaA/keystone@cli-v0.1.0#subdirectory=packages/devex-cli"
 # upgrade across workstations:
 uv tool upgrade devex-cli
 ```
@@ -18,17 +18,23 @@ uv tool upgrade devex-cli
 
 ```bash
 devex version
-devex standards-check     # validate current branch + last commit vs conventions.json (shift-left)
-devex init <service>      # bootstrap a new service onto the golden path  (scaffolded)
-devex dora                # report the four DORA metrics from the event stream  (scaffolded)
+devex standards-check       # validate current branch + last commit vs conventions.json (shift-left)
+devex check-pr-title "…"    # validate a PR title (used by CI — single source of truth)
+devex workid                # print the Work ID for the current change
+devex init <service>        # bootstrap a new service onto the golden path
+devex adopt                 # add Keystone artifacts to an existing repo (never overwrites app code)
+devex pr [--dry-run]        # open a PR (Work ID enforced in the title) via gh
+devex hooks install         # install pre-commit/pre-push shift-left hooks
+devex pipeline run --local  # simulate the PR pipeline's small-tests stage locally
+devex dora                  # report the four DORA metrics from the event stream
 ```
 
 ## Develop
 
 ```bash
 uv sync --extra dev
-uv run pytest             # 10 tests: unit + property-based (PBT)
+uv run pytest --cov=devex --cov-fail-under=80   # unit + property-based (PBT); coverage floor 80%
 uv run ruff check .
 ```
 
-The validators read the **same** `conventions.json` the CI workflows use — local "pass" means CI "pass". Implement the scaffolded commands against `.kiro/specs/devex-cli/tasks.md`.
+The validators read the **same** `conventions.json` the CI workflows use — local "pass" means CI "pass". The roadmap and remaining tasks live in `.kiro/specs/devex-cli/tasks.md`.
