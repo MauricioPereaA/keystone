@@ -34,7 +34,8 @@ def is_valid_service_name(name: str) -> bool:
     return bool(_NAME_RE.match(name))
 
 
-def _pr_template() -> str:
+def pr_template() -> str:
+    """The golden-path PR template body (used by `devex init` and `devex pr`)."""
     return (
         "<!-- Keystone PR template. Work ID required in the title: 'feat(scope): FIN-123 ...'. -->\n\n"
         "## Work ID\n\nCloses FIN-\n\n"
@@ -100,7 +101,7 @@ def scaffold_service(target: Path, service: str, language: str, *, overwrite: bo
     """Write the golden-path files into `target`. Existing files are skipped unless overwrite."""
     files = {
         "keystone.json": json.dumps({"service": service, "language": language}, indent=2) + "\n",
-        ".github/pull_request_template.md": _pr_template(),
+        ".github/pull_request_template.md": pr_template(),
         "package.json": _package_json(service),
         "scripts/generate-workflows.mjs": _generate_wrapper(),
         "README.md": _readme(service, language),

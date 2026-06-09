@@ -10,8 +10,8 @@
 - [ ] 6. `make sync-conventions` + CI drift check (canonical file vs bundled copy). (R6)
 - [x] 7. `init <service>`: scaffold service + PR template + call `@keystone/platform` workflow generator (shell-out + fallback). (R2)
 - [x] 8. `adopt` mode for existing repos (Transactionify case study) — never overwrites app code. (R2)
-- [ ] 9. `pr` command: enforce Work ID in title, apply template, open PR via `gh`. (R3)
-- [ ] 10. `hooks install`: write pre-commit/pre-push hooks invoking `standards-check`. (R4)
+- [x] 9. `pr` command: enforce Work ID in title (from the last commit), apply template, open PR via `gh` (`--dry-run` for safety). (R3)
+- [x] 10. `hooks install`: write pre-commit/pre-push hooks invoking `standards-check` (native, no pre-commit framework dep). (R4)
 - [x] 11. `dora` command: parse NDJSON stream, compute the four metrics, Rich table. (R5) — plus `workid` (extracts the Work ID for generated CI telemetry).
-- [ ] 12. Local pipeline simulation: `pipeline run --local`. (R1, bonus)
+- [x] 12. Local pipeline simulation: `pipeline run --local` (conventions gate + per-language small-tests). (R1, bonus)
 - [ ] 13. Bring coverage to ≥ 80% and document in README. (NFR)
