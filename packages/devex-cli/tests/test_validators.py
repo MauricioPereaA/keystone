@@ -33,6 +33,15 @@ def test_validate_commit_requires_work_id() -> None:
     assert validate_commit("feat: add payment validation").ok is False
 
 
+def test_validate_commit_enforces_subject_max_length() -> None:
+    # conventions.json sets commit.subjectMaxLength (72). An otherwise-valid subject
+    # over the limit must fail (the field was previously declared but unenforced).
+    over = "feat: FIN-1 " + "x" * 80
+    assert validate_commit(over).ok is False
+    at_limit = "feat: FIN-1 " + "x" * (72 - len("feat: FIN-1 "))
+    assert validate_commit(at_limit).ok is True
+
+
 def test_validate_pr_title() -> None:
     # A PR title is the squash-merge commit subject, so it follows the commit shape:
     # <type>(<scope>)?: <WORK-ID> <subject>.

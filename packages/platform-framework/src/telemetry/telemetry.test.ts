@@ -4,7 +4,7 @@ import { buildEvent, serializeEvent, SCHEMA_VERSION, type BuildEventInput } from
 const base: BuildEventInput = {
   event: "deployment.succeeded",
   workId: "FIN-123",
-  actor: "mauricio@org.com",
+  actor: "ci",
   repo: "transactionify",
   env: "production",
   commitSha: "abc123",
@@ -20,7 +20,7 @@ describe("DORA telemetry contract", () => {
 
   it("preserves the four W's (who/what/when/why)", () => {
     const e = buildEvent(base);
-    expect(e.actor).toBe("mauricio@org.com"); // who
+    expect(e.actor).toBe("ci"); // who
     expect(e.repo).toBe("transactionify"); // what
     expect(e.workId).toBe("FIN-123"); // why
     expect(e.timestamp).toBeDefined(); // when

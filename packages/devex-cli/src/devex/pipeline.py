@@ -12,6 +12,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from devex._log import log
+
 #: Per-language small-tests command (mirrors the framework toolchains).
 LOCAL_TEST_COMMANDS: dict[str, list[str]] = {
     "python": ["uv", "run", "pytest", "-q"],
@@ -30,7 +32,8 @@ def detect_language(root: Path, default: str = DEFAULT_LANGUAGE) -> str:
         return default
     try:
         return str(json.loads(config.read_text(encoding="utf-8")).get("language", default))
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError) as exc:
+        log.warning("keystone_json.unreadable", path=config, error=exc)
         return default
 
 

@@ -34,7 +34,14 @@ def validate_branch(name: str) -> Result:
 
 def validate_commit(message: str) -> Result:
     c = load_conventions()["commit"]
-    return _check(message.splitlines()[0] if message else "", c["pattern"], "commit", c["examples"][0])
+    subject = message.splitlines()[0] if message else ""
+    result = _check(subject, c["pattern"], "commit", c["examples"][0])
+    if not result.ok:
+        return result
+    max_len = c.get("subjectMaxLength")
+    if max_len and len(subject) > max_len:
+        return Result(False, f"commit subject too long: {len(subject)} > {max_len} chars")
+    return result
 
 
 def validate_pr_title(title: str) -> Result:
