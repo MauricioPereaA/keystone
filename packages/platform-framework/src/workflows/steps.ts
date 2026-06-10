@@ -43,12 +43,34 @@ export function standardsCheckStep(): Step {
   });
 }
 
-/** Node setup for the CDK deploy (the infra app is TypeScript regardless of service language). */
+/**
+ * Node setup for the CDK deploy (the infra app is TypeScript regardless of the
+ * service's language). The consumer owns the CDK app, so we must NOT assume one
+ * package manager: detect it from the committed lockfile and fall back to npm,
+ * which is always on the runner. corepack ships the pnpm/yarn shims with Node, so
+ * no extra setup action is needed — a hard `pnpm/action-setup` step broke every
+ * npm/yarn service (it failed before a single resource was deployed).
+ */
 export function cdkSetupSteps(): Step[] {
   return [
-    new Step({ name: "Set up pnpm", uses: "pnpm/action-setup@v4" }),
-    new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "24", cache: "pnpm" } }),
-    new Step({ name: "Install infra dependencies", run: "pnpm install --frozen-lockfile" }),
+    new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "24" } }),
+    new Step({
+      name: "Install infra dependencies",
+      run: [
+        "set -euo pipefail",
+        "if [ -f pnpm-lock.yaml ]; then",
+        "  corepack enable",
+        "  pnpm install --frozen-lockfile",
+        "elif [ -f yarn.lock ]; then",
+        "  corepack enable",
+        "  yarn install --frozen-lockfile",
+        "elif [ -f package-lock.json ]; then",
+        "  npm ci",
+        "else",
+        "  npm install",
+        "fi",
+      ].join("\n"),
+    }),
   ];
 }
 
@@ -71,7 +93,9 @@ export function cdkDeployStep(env: Environment): Step {
   return new Step({
     name: `Deploy to ${env} (CDK)`,
     id: "deploy",
-    run: `pnpm exec cdk deploy --all --require-approval never --context env=${env}`,
+    // `npx` resolves the cdk bin from node_modules/.bin no matter which package
+    // manager installed it — portable across npm/pnpm/yarn consumers.
+    run: `npx cdk deploy --all --require-approval never --context env=${env}`,
   });
 }
 
