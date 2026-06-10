@@ -101,6 +101,27 @@ describe("PR pipeline generator", () => {
     ).toThrow(/apiSpec/);
   });
 
+  it("deploy job is package-manager-agnostic (regression: npm/yarn CDK apps must deploy too)", () => {
+    // A hard `pnpm/action-setup` + `pnpm install --frozen-lockfile` deploy job
+    // failed for every consumer that wasn't pnpm-based (no pnpm-lock.yaml) —
+    // surfaced by the Transactionify adoption (an npm CDK app). The deploy job
+    // must detect the consumer's package manager, not assume one.
+    const wf = generatePrPipeline({ repo: "x", language: "python" });
+    const [, deploy] = deployJobsOf(wf)[0];
+    const steps = deploy.steps ?? [];
+    // the version-less pnpm setup action (which failed on every runner) is gone…
+    expect(steps.some((s) => s.uses === "pnpm/action-setup@v4")).toBe(false);
+    const runs = steps.map((s) => s.run ?? "").join("\n");
+    // …deploy is via npx (resolves cdk from any package manager), not pnpm exec…
+    expect(runs).not.toContain("pnpm exec cdk");
+    expect(runs).toContain("npx cdk deploy");
+    // …and install is now lockfile-detected (pnpm/yarn guarded behind a check)
+    // with an npm fallback for the common lockfile-less consumer.
+    expect(runs).toContain("if [ -f pnpm-lock.yaml ]");
+    expect(runs).toContain("pnpm install --frozen-lockfile"); // present, but guarded
+    expect(runs).toContain("npm install"); // unconditional fallback for npm/no-lock
+  });
+
   it("generated multi-line shell steps are explicitly fail-fast (set -euo pipefail)", () => {
     const yaml = workflowToYaml(generatePrPipeline({ repo: "x", language: "python" }));
     expect(yaml).toContain("set -euo pipefail");

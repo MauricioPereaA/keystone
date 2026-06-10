@@ -79,15 +79,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - name: Install infra dependencies
-        run: pnpm install --frozen-lockfile
+        run: |-
+          set -euo pipefail
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile
+          elif [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -111,7 +120,7 @@ jobs:
             | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Deploy to sandbox (CDK)
         id: deploy
-        run: pnpm exec cdk deploy --all --require-approval never --context env=sandbox
+        run: npx cdk deploy --all --require-approval never --context env=sandbox
       - name: Emit DORA telemetry (deployment.succeeded)
         if: success()
         run: |-
