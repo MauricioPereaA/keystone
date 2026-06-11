@@ -1,0 +1,130 @@
+/**
+ * Shared step factories used by both pipeline generators.
+ *
+ * The single most important one is {@link emitTelemetryStep}: because the
+ * FRAMEWORK (not the application) emits the DoraEvent, every generated deploy
+ * job ships the identical event shape regardless of language. That is the
+ * structural guarantee behind DORA comparability (ADR-0002). Convention
+ * validation and Work ID resolution are delegated to the `devex` CLI so the
+ * regex lives in exactly one place (`conventions.json`), never in this YAML.
+ */
+import { Step, expressions } from "@github-actions-workflow-ts/lib";
+import { SCHEMA_VERSION } from "../telemetry/index.js";
+/** Pinned source for the `devex` CLI (self-contained Git install — ADR-0001). */
+const DEVEX_SPEC = "git+https://github.com/MauricioPereaA/keystone#subdirectory=packages/devex-cli";
+/** GHA expression for the Work ID resolved by the small-tests job. */
+export const WORK_ID_EXPR = expressions.expn("needs.small-tests.outputs.work_id");
+export function checkoutStep() {
+    return new Step({ name: "Checkout", uses: "actions/checkout@v4" });
+}
+export function setupUvStep() {
+    return new Step({ name: "Set up uv", uses: "astral-sh/setup-uv@v6" });
+}
+/**
+ * Validate branch + commit against `conventions.json` AND publish the Work ID
+ * as a step output — both via the `devex` CLI, so CI enforces the exact same
+ * rules the developer ran locally (shift-left parity, single source of truth).
+ */
+export function standardsCheckStep() {
+    return new Step({
+        name: "Validate conventions & resolve Work ID (devex)",
+        id: "standards",
+        run: [
+            "set -euo pipefail",
+            `uvx --from "${DEVEX_SPEC}" devex standards-check`,
+            `echo "work_id=$(uvx --from "${DEVEX_SPEC}" devex workid)" >> "$GITHUB_OUTPUT"`,
+        ].join("\n"),
+    });
+}
+/**
+ * Node setup for the CDK deploy (the infra app is TypeScript regardless of the
+ * service's language). The consumer owns the CDK app, so we must NOT assume one
+ * package manager: detect it from the committed lockfile and fall back to npm,
+ * which is always on the runner. corepack ships the pnpm/yarn shims with Node, so
+ * no extra setup action is needed — a hard `pnpm/action-setup` step broke every
+ * npm/yarn service (it failed before a single resource was deployed).
+ */
+export function cdkSetupSteps() {
+    return [
+        new Step({ name: "Set up Node", uses: "actions/setup-node@v4", with: { "node-version": "24" } }),
+        new Step({
+            name: "Install infra dependencies",
+            run: [
+                "set -euo pipefail",
+                "if [ -f pnpm-lock.yaml ]; then",
+                "  corepack enable",
+                "  pnpm install --frozen-lockfile",
+                "elif [ -f yarn.lock ]; then",
+                "  corepack enable",
+                "  yarn install --frozen-lockfile",
+                "elif [ -f package-lock.json ]; then",
+                "  npm ci",
+                "else",
+                "  npm install",
+                "fi",
+            ].join("\n"),
+        }),
+    ];
+}
+/**
+ * Authenticate to AWS via GitHub OIDC — never static keys (security.md §4).
+ * The role ARN and region are non-sensitive repo Variables, not Secrets.
+ */
+export function configureAwsCredentialsStep() {
+    return new Step({
+        name: "Configure AWS credentials (OIDC)",
+        uses: "aws-actions/configure-aws-credentials@v4",
+        with: {
+            "role-to-assume": expressions.var("AWS_DEPLOY_ROLE_ARN"),
+            "aws-region": expressions.var("AWS_REGION"),
+        },
+    });
+}
+export function cdkDeployStep(env) {
+    return new Step({
+        name: `Deploy to ${env} (CDK)`,
+        id: "deploy",
+        // `npx` resolves the cdk bin from node_modules/.bin no matter which package
+        // manager installed it — portable across npm/pnpm/yarn consumers.
+        run: `npx cdk deploy --all --require-approval never --context env=${env}`,
+    });
+}
+/**
+ * Emit one NDJSON {@link DoraEvent} for a deploy stage. Built with `jq` from the
+ * GitHub Actions context so it is language-agnostic; the schema version is
+ * sourced from the telemetry contract (not hard-coded). IDs only — no secrets
+ * or PII (audit-logging.md §7).
+ */
+export function emitTelemetryStep(input) {
+    const workId = input.workIdExpr ?? WORK_ID_EXPR;
+    const actor = expressions.expn("github.actor");
+    const repo = expressions.expn("github.repository");
+    const sha = expressions.expn("github.sha");
+    const runId = expressions.expn("github.run_id");
+    const commitTime = expressions.expn("github.event.head_commit.timestamp || github.event.pull_request.updated_at");
+    const run = [
+        "set -euo pipefail",
+        "jq -nc \\",
+        `  --arg schemaVersion "${SCHEMA_VERSION}" \\`,
+        `  --arg event "${input.event}" \\`,
+        `  --arg workId "${workId}" \\`,
+        `  --arg actor "${actor}" \\`,
+        `  --arg repo "${repo}" \\`,
+        `  --arg env "${input.env}" \\`,
+        `  --arg commitSha "${sha}" \\`,
+        `  --arg commitTime "${commitTime}" \\`,
+        '  --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \\',
+        `  --arg runId "${runId}" \\`,
+        "  '{schemaVersion:$schemaVersion,event:$event,workId:$workId,actor:$actor," +
+            "repo:$repo,env:$env,commitSha:$commitSha,commitTime:$commitTime,timestamp:$timestamp,runId:$runId}' \\",
+        '  | tee -a "$GITHUB_STEP_SUMMARY"',
+    ].join("\n");
+    return new Step({ name: `Emit DORA telemetry (${input.event})`, if: input.if, run });
+}
+/** Report the four DORA metrics from the telemetry stream (integration pipeline tail). */
+export function doraReportStep() {
+    return new Step({
+        name: "Report DORA metrics (devex dora)",
+        run: `uvx --from "${DEVEX_SPEC}" devex dora`,
+    });
+}

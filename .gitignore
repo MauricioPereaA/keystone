@@ -26,6 +26,12 @@ node_modules/
 .vite/
 *.tsbuildinfo
 
+# The framework SHIPS its compiled output: it is distributed over Git with no
+# registry to host a built tarball, so `dist/` is committed and kept in sync by a
+# CI gate (ADR-0004). This re-includes it despite the global `dist/` ignore above.
+!/packages/platform-framework/dist/
+!/packages/platform-framework/dist/**
+
 # ── AWS CDK ──────────────────────────────────────────────────────
 cdk.out/
 *.cdk.staging/
