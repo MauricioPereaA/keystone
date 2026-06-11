@@ -1,8 +1,9 @@
 # Contributing to Keystone
 
 Keystone is inner-source — any engineer on any team can contribute. The full
-guide (the four common contribution types, the local loop, and the review
-process) lives at **[`docs/contributing.md`](docs/contributing.md)**.
+guide (the four common contribution types, the local loop, the review process,
+and the governance model — RFCs for breaking contract changes, rotating
+maintainers, deprecation policy) lives at **[`docs/contributing.md`](docs/contributing.md)**.
 
 Quick start:
 
