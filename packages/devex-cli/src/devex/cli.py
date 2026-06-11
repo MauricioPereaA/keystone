@@ -41,8 +41,30 @@ app = typer.Typer(help="Keystone devex — the developer interface to the platfo
 console = Console()
 
 
+def _print_version() -> None:
+    console.print(f"devex {__version__}")
+
+
+def _version_callback(value: bool) -> None:
+    # Eager: `devex --version` must short-circuit BEFORE the callback body loads
+    # conventions.json, so the version prints even outside a repo or with a bad
+    # source file (the conventional contract of --version).
+    if value:
+        _print_version()
+        raise typer.Exit()
+
+
 @app.callback()
-def _main() -> None:
+def _main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        help="Show the CLI version and exit.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
+) -> None:
     """Validate the conventions source up-front; a bad file fails fast (exit CONFIG)."""
     try:
         load_conventions()
@@ -67,7 +89,7 @@ def _resolve_branch() -> str:
 @app.command()
 def version() -> None:
     """Print the CLI version."""
-    console.print(f"devex {__version__}")
+    _print_version()
 
 
 def _standards_results() -> list[Result]:

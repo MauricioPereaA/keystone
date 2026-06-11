@@ -33,6 +33,19 @@ def test_version_runs() -> None:
     assert "devex" in result.stdout
 
 
+def test_version_flag_runs() -> None:
+    # The conventional `--version` flag, alongside the `version` subcommand.
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert "devex" in result.stdout
+
+
+def test_version_short_flag_runs() -> None:
+    result = runner.invoke(app, ["-V"])
+    assert result.exit_code == 0
+    assert "devex" in result.stdout
+
+
 def test_check_pr_title_accepts_conventional_title_with_work_id() -> None:
     result = runner.invoke(app, ["check-pr-title", "feat(api): FIN-123 add payment validation"])
     assert result.exit_code == 0
