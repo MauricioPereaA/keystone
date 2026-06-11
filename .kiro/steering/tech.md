@@ -31,7 +31,7 @@ The serverless stack (Lambda + API Gateway + DynamoDB + CloudWatch) is ~$0/month
 - **Prefer HTTP API** where the challenge allows ($1/M) over REST ($3.50/M) — though the reference uses REST API Gateway.
 - **Set an AWS Budgets alarm** at $25 / $50.
 
-Full rules: `.claude/rules/aws-cdk.md`.
+Full rules: `docs/engineering-rules/aws-cdk.md`.
 
 ## Polyglot future
 

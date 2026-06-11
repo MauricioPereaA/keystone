@@ -1,32 +1,28 @@
----
-name: new-language
-description: Add a new application language (Go, Clojure, TypeScript, …) to the Keystone golden path so a team in that stack gets the same workflows, telemetry, and DORA comparability. Use when onboarding a polyglot team or extending the workflow generator's per-language support. The key principle — add a test-toolchain mapping, never a new metric.
----
+# Runbook — add a new application language to the golden path
 
-# new-language — extend the golden path to another stack
-
-Use when a team's service is written in a language the framework's workflow
-generator doesn't yet have a small-tests toolchain for.
-
-Do **not** use to change *what* a metric means — DORA stays comparable because
-the telemetry event is identical across languages (ADR-0002). You are only
-teaching the generator how to run "small-tests" for the new language.
+Use this when a team's service is written in a language the framework's workflow
+generator doesn't yet have a small-tests toolchain for (Go, Clojure, …). The key
+principle: **you add a test-toolchain mapping, never a new metric** — DORA stays
+comparable because the telemetry event is identical across languages (ADR-0002).
 
 ## Principle
 
-The DoraEvent is language-agnostic and framework-emitted. Adding a language must
+The `DoraEvent` is language-agnostic and framework-emitted. Adding a language must
 NOT add a per-language metric or touch `telemetry/`. You add: (a) how small-tests
-runs, and (b) optionally a Lambda runtime mapping for the construct.
+runs for the new language, and (b) optionally a Lambda runtime mapping for the
+construct.
 
 ## Steps
 
 ### 1. Gate + spec
-- Adding a language is a framework feature → confirm a PRD covers it (or run `/prd`).
-- If it introduces a non-obvious choice (e.g. a new test runner), note it in an ADR.
+- Adding a language is a framework feature → confirm a PRD covers it (scaffold
+  from `docs/prd/00-template.md` if not).
+- If it introduces a non-obvious choice (e.g. a new test runner), record it in an
+  ADR (`docs/architecture/adr/0000-template.md`).
 
 ### 2. Add the small-tests toolchain mapping
 In `packages/platform-framework/src/workflows/`, extend the `language` union and
-the switch that selects the small-tests job:
+the `LANGUAGE_TOOLCHAINS` mapping:
 
 | Language | Install + small-tests command (example) |
 |---|---|
@@ -60,7 +56,7 @@ props (e.g. `provided.al2023` for Go/custom runtimes). Keep log retention + tags
 
 A PR that: extends the `language` union, adds the toolchain mapping, keeps
 telemetry identical, adds a snapshot test, and updates the consumption guide.
-Request a platform-team review (this touches a contract surface).
+Request a maintainer review (this touches a contract surface).
 
 ## Why
 

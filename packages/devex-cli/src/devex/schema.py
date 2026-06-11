@@ -2,7 +2,7 @@
 
 Validating the source on load (rather than trusting it) means a malformed or
 corrupted conventions file fails fast with a clear message instead of silently
-weakening every team's checks at once (see .claude/rules/security.md §6 and
+weakening every team's checks at once (see docs/engineering-rules/security.md §6 and
 error-handling.md §CLI 3). Regex fields are compiled during validation, so a
 broken pattern is caught here, not at the first validation call.
 """

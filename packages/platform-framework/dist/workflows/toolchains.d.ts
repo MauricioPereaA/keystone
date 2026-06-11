@@ -6,7 +6,7 @@
  * pipeline SHAPE here and only varying the test toolchain behind one interface:
  * every language runs the same three small-test categories (unit +
  * property-based + api-contract), so "small-tests passed" means the same thing
- * for every team. The `/new-language` skill extends this map — and only this
+ * for every team. The new-language runbook extends this map — and only this
  * map — to onboard a new stack. It must never add a new metric.
  */
 import { Step } from "@github-actions-workflow-ts/lib";

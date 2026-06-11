@@ -2,7 +2,7 @@
 
 One-time setup so generated deploy workflows can assume an AWS role through
 GitHub's OIDC provider — no `AWS_ACCESS_KEY_ID` secrets stored anywhere. This
-is the auth model the platform framework emits (see `.claude/rules/aws-cdk.md`
+is the auth model the platform framework emits (see `docs/engineering-rules/aws-cdk.md`
 and the platform-framework design spec).
 
 ## 1. Register GitHub as an OIDC identity provider in AWS (once per account)
@@ -81,4 +81,4 @@ every workflow run.
 ## Cost note
 
 After any demo, `cdk destroy` all stacks and confirm no NAT gateways or
-unbounded log groups remain (`.claude/rules/aws-cdk.md`).
+unbounded log groups remain (`docs/engineering-rules/aws-cdk.md`).

@@ -10,7 +10,7 @@
  * Public surface:
  *   - generatePrPipeline / generateIntegrationPipeline — the two pipelines
  *   - workflowToYaml — serialize a generated workflow to YAML
- *   - LANGUAGE_TOOLCHAINS — per-language test toolchains (extended by /new-language)
+ *   - LANGUAGE_TOOLCHAINS — per-language test toolchains (extended via the new-language runbook)
  *   - the step factories (emitTelemetryStep, …) for advanced composition
  */
 export * from "./options.js";

@@ -2,7 +2,7 @@
 
 **Scope:** Repo-wide. This rule fires *before* any code-writing rule.
 
-**See also:** [`docs/prd/README.md`](../../docs/prd/README.md) (human flow), [`commit-and-pr.md`](commit-and-pr.md), [`boundaries.md`](boundaries.md), [`docs/architecture/adr/`](../../docs/architecture/adr/).
+**See also:** [`docs/prd/README.md`](../prd/README.md) (human flow), [`commit-and-pr.md`](commit-and-pr.md), [`boundaries.md`](boundaries.md), [`docs/architecture/adr/`](../architecture/adr/).
 
 ## When this rule applies
 
@@ -12,7 +12,7 @@ Before writing any code that:
 - Adds a new endpoint with new behavior (not a refactor of an existing one).
 - Substantially changes an existing feature (new field, new screen, behavior change a user notices).
 - Adds a new integration with an external service.
-- Deviates from an existing rule in `.claude/rules/`.
+- Deviates from an existing rule in `docs/engineering-rules/`.
 
 If the request is a bug fix without behavior change, a pure refactor, a dependency bump, a lint/format/CI tweak, or a docs-only edit, **skip this rule entirely** and proceed.
 
@@ -39,10 +39,10 @@ If the request is a bug fix without behavior change, a pure refactor, a dependen
 
    **c. No PRD covers this scope.**
    - **Stop.** Do not write feature code yet.
-   - Invoke the [`/prd`](../skills/prd/SKILL.md) skill. It runs a structured interview and scaffolds the PRD from `docs/prd/00-template.md`.
+   - Scaffold the PRD from `docs/prd/00-template.md` (a structured interview: scope, users, functional requirements).
    - Surface the draft PRD to the user for review. Wait for `Approved` (or explicit go-ahead) before implementing.
 
-4. **Architectural choices need an ADR, not a PRD.** If the request implies a non-obvious technical fork (new data store, new auth model, new deployment target, deviation from an existing rule, new dependency category), an ADR is required *in addition to* the PRD. The `/prd` skill detects this case and offers to scaffold both.
+4. **Architectural choices need an ADR, not a PRD.** If the request implies a non-obvious technical fork (new data store, new auth model, new deployment target, deviation from an existing rule, new dependency category), an ADR is required *in addition to* the PRD. Scaffold both together (ADR template: `docs/architecture/adr/0000-template.md`).
 
 5. **Reference the PRD in the PR.** The PR template has a dedicated `Linked PRD` line. The agent fills it in; the human reviewer treats a missing PRD as a blocker.
 

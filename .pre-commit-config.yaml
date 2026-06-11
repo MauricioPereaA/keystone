@@ -3,7 +3,7 @@ default_language_version:
 
 # Hooks run on every `git commit`. Fail-fast: if something auto-fixes, the commit
 # aborts, the dev restages, and creates a new commit (keeps formatting and logic
-# changes separate). Never bypass with --no-verify (.claude/rules/no-direct-push-to-main.md).
+# changes separate). Never bypass with --no-verify (docs/engineering-rules/no-direct-push-to-main.md).
 #
 # Inventory:
 #   - Generic hygiene  : whitespace, yaml/json, large files, private-key detection

@@ -20,7 +20,7 @@ from pathlib import Path
 LANGUAGES = ("python", "go", "clojure", "typescript")
 _NAME_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
-#: Framework install spec (Git, no registry — see .claude/rules/releasing.md).
+#: Framework install spec (Git, no registry — see docs/engineering-rules/releasing.md).
 _FRAMEWORK_SPEC = "github:MauricioPereaA/keystone#main&path:/packages/platform-framework"
 
 

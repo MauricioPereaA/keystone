@@ -24,7 +24,7 @@ Collector (PoC): NDJSON appended to CloudWatch Logs / S3. `devex dora` reads it.
 
 ## CDK construct — R2
 
-`GoldenService` extends `constructs.Construct`: a `lambda.Function` (runtime from props), a `apigateway.RestApi`, and a `logs.LogGroup` with `retention` **required** (defaults to 30 days — cost guardrail per `.claude/rules/aws-cdk.md`). Standard tags (`project=keystone`, `service`, `env`) for cost attribution and teardown.
+`GoldenService` extends `constructs.Construct`: a `lambda.Function` (runtime from props), a `apigateway.RestApi`, and a `logs.LogGroup` with `retention` **required** (defaults to 30 days — cost guardrail per `docs/engineering-rules/aws-cdk.md`). Standard tags (`project=keystone`, `service`, `env`) for cost attribution and teardown.
 
 ## Multi-environment promotion
 

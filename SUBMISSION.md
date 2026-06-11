@@ -30,13 +30,13 @@ Deeper, if time allows: [`docs/consumption-guide.md`](docs/consumption-guide.md)
 | DORA: collection · standardization · reporting | ✅ one framework-emitted `DoraEvent`; **all four metrics computable** by `devex dora` (`commitTime` is first-class) | ADR-0002, `telemetry/`, `dora.py` |
 | 2-page ADR PDF | ✅ rendered + committed | [`keystone-strategy.pdf`](docs/architecture/keystone-strategy.pdf) |
 | README · Consumption guide · Contribution guide | ✅ | root + `docs/` |
-| Shared conventions & git governance | ✅ Work ID everywhere; PR template; two-reviewer ruleset-as-code (applying it is a one-time admin step: `make protect-main`) | `conventions.json`, ADR-0003 |
+| Shared conventions & git governance | ✅ Work ID everywhere; PR template; two-reviewer ruleset **applied and active** on `main` (shipped as code: `make protect-main`) | `conventions.json`, ADR-0003 |
 | PR pipeline (small-tests → deploy) + Integration pipeline | ✅ generated per language; sandbox deploy **ran live via OIDC**; staging→prod generated, not run live (cost cap) | run [27309574910](https://github.com/MauricioPereaA/transactionify/actions/runs/27309574910) |
 | Bonus A–E | ✅ LocalStack dev env · git hooks · Amazon Q reviews (live on PR #17) · Integration-pipeline generator · Kiro steering/specs | `.kiro/steering/challenge-coverage.md` §8 |
 
 ## Design decisions worth interrogating
 
-1. **`conventions.json` is a runtime source of truth, not documentation.** Both packages read it (the CLI bundles a synced copy; CI fails on drift). No Work-ID regex exists in Python or TypeScript code — drift is structurally impossible. We deliberately did **not** hand-mirror typed schemas across the two languages; the cross-language contract is the JSON plus the documented event shape (see `.claude/rules/dry-principles.md` for why).
+1. **`conventions.json` is a runtime source of truth, not documentation.** Both packages read it (the CLI bundles a synced copy; CI fails on drift). No Work-ID regex exists in Python or TypeScript code — drift is structurally impossible. We deliberately did **not** hand-mirror typed schemas across the two languages; the cross-language contract is the JSON plus the documented event shape (see `docs/engineering-rules/dry-principles.md` for why).
 2. **DORA comes from the pipeline, not the application** (ADR-0002). The framework generates every deploy job and injects the telemetry step, so a Python team and a Go team emit byte-identical events. `devex dora` derives all four metrics downstream.
 3. **The CLI is self-contained** (ADR-0001) — no workspace deps, conventions bundled — because `uv` Git-subdirectory installs break otherwise. This was a tooling-reality decision, not a style choice.
 4. **The framework ships a prebuilt `dist/`** (ADR-0004). Build-on-install failed a real clean-room test (pnpm ≥ 11.5 blocks git-dep build scripts). The committed artifact + a CI freshness gate is the registry-less equivalent of publishing a built package.
@@ -60,7 +60,7 @@ Nothing below blocks the platform's claims; all are documented where they were f
 3. **The generator assumes the trunk is `main`.** The case study hit this once (service trunk was `master`; quick-fixed by renaming). *Fix:* a `trunkBranch` field in `keystone.json` threaded into both pipeline generators. *Trigger:* a second adopting service with a non-`main` trunk.
 4. **GitHub merge commits fail the conventions gate on trunk pushes** (observed once, on the case-study repo — it correctly skipped the deploys). *Fix:* skip the commit check on protected-branch pushes, exactly as FIN-313 does for `pull_request` checkouts. *Trigger:* already fired; queued as the next CLI patch.
 5. **staging → production promotion is generated but was not run live** — a deliberate cost decision on a personal AWS account; the sandbox leg of the same generated job is proven end-to-end.
-6. **Two-reviewer enforcement is shipped as ruleset-as-code, applied manually.** `make protect-main` applies `.github/rulesets/main-protection.json`; until an org runs it, the PR pipeline emits the checks but GitHub doesn't require them.
+6. **Two-reviewer enforcement is live with an admin-bypass escape hatch.** The ruleset (`.github/rulesets/main-protection.json`, applied via `make protect-main`) is **active on `main`**: 2 approvals + 4 required status checks, force-push/deletion blocked. Repo admins can bypass — every bypass is recorded by GitHub, which is itself audit evidence; in an org, the bypass list shrinks to break-glass only.
 
 ## Verify it yourself
 

@@ -1,6 +1,6 @@
 """Single configuration entrypoint for the devex CLI.
 
-Per .claude/rules/environment-variables.md, the environment is read in ONE place;
+Per docs/engineering-rules/environment-variables.md, the environment is read in ONE place;
 the rest of the code imports typed values from here, never `os.environ` directly.
 Keeping the lookups in functions (not module-level constants) makes them testable
 — a test can set the env var and call the function without re-importing.

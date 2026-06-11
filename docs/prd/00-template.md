@@ -53,14 +53,14 @@ Numbered, testable. Each one should map to an acceptance criterion or test.
 ## Non-functional requirements
 
 <!--
-The defaults below are inherited from .claude/rules/. Only call out exceptions
+The defaults below are inherited from docs/engineering-rules/. Only call out exceptions
 or stricter bars. If everything is "default", write "All defaults apply".
 
 Defaults inherited:
-  - security: GitHub OIDC (no static keys), no secrets/PII in logs (.claude/rules/security.md)
-  - audit/telemetry: deploys emit the standard DoraEvent (.claude/rules/audit-logging.md)
-  - testing: CLI ≥80% (pytest + Hypothesis), framework via Vitest + clean tsc (.claude/rules/testing-conventions.md)
-  - AWS cost: log retention + tags, no NAT, cdk-nag clean (.claude/rules/aws-cdk.md)
+  - security: GitHub OIDC (no static keys), no secrets/PII in logs (docs/engineering-rules/security.md)
+  - audit/telemetry: deploys emit the standard DoraEvent (docs/engineering-rules/audit-logging.md)
+  - testing: CLI ≥80% (pytest + Hypothesis), framework via Vitest + clean tsc (docs/engineering-rules/testing-conventions.md)
+  - AWS cost: log retention + tags, no NAT, cdk-nag clean (docs/engineering-rules/aws-cdk.md)
 -->
 
 - All defaults apply.

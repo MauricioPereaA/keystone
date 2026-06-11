@@ -1,8 +1,8 @@
 # SETUP.md — Getting started
 
 Keystone is a monorepo with two independently distributable packages plus a
-shared conventions source and an agent operating system (`.claude/`). This guide
-gets both packages running locally.
+shared conventions source and an engineering rulebook (`docs/engineering-rules/`).
+This guide gets both packages running locally.
 
 ## Prerequisites
 
@@ -45,14 +45,15 @@ make check-conventions    # CI gate: fail on drift
 - `packages/platform-framework/` — the TypeScript framework (`@keystone/platform`).
 - `.kiro/{steering,specs}/` — Spec-Driven Development context + per-feature specs.
 - `docs/{prd,architecture/adr,runbooks}/` — specs, decisions, ops.
-- `.claude/` — the agent operating system: `rules/` (read before acting) + `skills/` (slash commands).
+- `docs/engineering-rules/` — the engineering rulebook (conventions, security, SOC 2, AWS cost).
 
-## Working with an AI agent
+## Development flow
 
-Open the repo in Claude Code (or any agent that reads `AGENTS.md`). It will load
-`CLAUDE.md` → `.claude/rules/` → `.kiro/steering/`. The PRD gate
-(`.claude/rules/prd-driven-development.md`) fires before any feature work; use the
-`/prd` skill to scaffold a spec, then implement against `.kiro/specs/<feature>/tasks.md`.
+Read `docs/engineering-rules/00-index.md` (the rule map) and `.kiro/steering/`
+(persistent project context). The PRD gate
+(`docs/engineering-rules/prd-driven-development.md`) fires before any feature work:
+scaffold a spec from `docs/prd/00-template.md`, then implement against
+`.kiro/specs/<feature>/tasks.md`.
 
 ## Install from Git (consumers)
 

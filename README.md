@@ -91,16 +91,16 @@ keystone/
 ├── docs/
 │   ├── prd/                   # Product Requirements Documents
 │   ├── architecture/adr/      # Architecture Decision Records
+│   ├── engineering-rules/     # the engineering rulebook (conventions, security, SOC 2, AWS cost)
 │   ├── consumption-guide.md   # how teams install / configure / extend / upgrade
 │   └── contributing.md        # inner-source contribution guide
-├── .claude/                   # agent operating system (rules + skills) that builds this repo
 └── .github/workflows/         # dogfooding: Keystone runs its own generated pipelines
 ```
 
 ## Development workflow (Spec-Driven)
 
-1. **Spec before code.** A PRD (`docs/prd/`) and, for technical forks, an ADR (`docs/architecture/adr/`) precede implementation. The `/prd` skill scaffolds them via interview.
-2. **Steering files** (`.kiro/steering/`) give the AI agent persistent context; **specs** (`.kiro/specs/`) drive each feature.
+1. **Spec before code.** A PRD (`docs/prd/`) and, for technical forks, an ADR (`docs/architecture/adr/`) precede implementation, scaffolded from their templates.
+2. **Steering files** (`.kiro/steering/`) hold persistent project context; **specs** (`.kiro/specs/`) drive each feature.
 3. **Convention over configuration.** `devex init` generates a repo where the golden path is the default; the framework generates the workflows.
 4. **Shift-left.** `devex standards-check` + git hooks fail fast on the workstation, with the same rules CI uses.
 5. **Governance.** Conventional commits with Work ID, two-reviewer rule, no direct push to `main`.
@@ -131,7 +131,7 @@ This is a PoC with deliberate scope decisions. Statuses are honest; every 🟡/�
 | `DoraEvent` telemetry contract | ✅ Real | TS emits, Python computes — one schema. CI emission lands in the run summary today; CloudWatch-sink wiring is the queued next PR |
 | Language toolchains (Python · TS · Go · Clojure) | ✅ Real | All four generate (snapshot-tested); Python proven end-to-end on a live service |
 | Integration pipeline (staging → production) | 🟡 Generated | Triggered live on `main`; promotion not run live (deliberate cost cap); merge-commit gate edge ticketed |
-| Two-reviewer enforcement | 🟡 Ruleset-as-code | `make protect-main` applies [`main-protection.json`](.github/rulesets/main-protection.json); a one-time admin step |
+| Two-reviewer enforcement | ✅ Active | [`main-protection.json`](.github/rulesets/main-protection.json) applied to `main`: 2 approvals + required checks, no force-push (admin bypass recorded) |
 | Post-deploy schemathesis fuzzing | ⏭️ Queued | Second half of FIN-314; lands with the CloudWatch-sink wiring |
 | Configurable trunk branch | ⏭️ Queued | Trigger already observed once (a consumer's trunk was `master`) |
 | **Bonuses A–E** | ✅ Real | LocalStack dev env · git hooks · Amazon Q reviews (live on [PR #17](https://github.com/MauricioPereaA/keystone/pull/17)) · Integration-pipeline generator · Kiro steering/specs |
@@ -144,4 +144,4 @@ This is a PoC with deliberate scope decisions. Statuses are honest; every 🟡/�
 - **Contribution (inner-source) guide:** [`docs/contributing.md`](docs/contributing.md) — incl. governance: RFC process, maintainer rotation, deprecation policy.
 - **Reviewer's guide (challenge submission):** [`SUBMISSION.md`](SUBMISSION.md)
 - **Integration case study (real adoption):** [`docs/case-study-transactionify.md`](docs/case-study-transactionify.md)
-- **AWS conventions & cost guardrails:** [`.claude/rules/aws-cdk.md`](.claude/rules/aws-cdk.md)
+- **AWS conventions & cost guardrails:** [`docs/engineering-rules/aws-cdk.md`](docs/engineering-rules/aws-cdk.md)

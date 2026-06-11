@@ -1,6 +1,6 @@
 """CLI exit codes — the contract hooks and CI depend on.
 
-Defined once (no magic numbers; see .claude/rules/magic-values.md §3 and
+Defined once (no magic numbers; see docs/engineering-rules/magic-values.md §3 and
 error-handling.md §CLI 5): 0 pass, 1 validation failure, 2 usage/config error.
 """
 

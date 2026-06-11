@@ -32,7 +32,7 @@ Map a task to the rule that covers it. Each rule declares its **scope**; if it d
 
 ## Reading order on first contact
 
-1. `CLAUDE.md` (root) — project overview + invariants.
+1. `README.md` + `SUBMISSION.md` (root) — project overview + invariants.
 2. `prd-driven-development.md` — the gate before code.
 3. `boundaries.md` — constraints that never bend.
 4. `architecture.md` — the mental model (monorepo + conventions).
