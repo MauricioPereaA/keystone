@@ -11,7 +11,7 @@
 1. Transactionify adopted the golden path with `devex adopt` — generated CI
    workflows, the PR template, `keystone.json`, and the shared conventions, with
    **zero changes to its application code**.
-2. Running a real consumer surfaced **five concrete platform gaps**. Each was fixed
+2. Running a real consumer surfaced **six concrete platform gaps**. Each was fixed
    as a small, reviewed inner-source PR in `keystone` — the platform got better
    *because* it was used, which is the whole point of an inner-source platform.
 3. The standardized small-tests stage ran in CI **for the first time in this
@@ -21,8 +21,9 @@
 4. The catch→fix loop is visible as two CI runs on the same PR: **red (6 caught) →
    green (fixed)**.
 
-The deploy stage (sandbox → DORA telemetry on real AWS) is the next chapter — see
-[Next: the deploy stage](#next-the-deploy-stage).
+5. The deploy stage was then run **for real on AWS**: the PR pipeline deployed the
+   service through a least-privilege GitHub **OIDC** role (no static keys) and emitted
+   a real `DoraEvent` — see [Act 3](#4-act-3--the-deploy-stage-on-real-aws-oidc).
 
 ---
 
@@ -55,9 +56,10 @@ below was found by adopting Transactionify and fixed as a reviewed PR in `keysto
 | 3 | The contract step hard-coded `openapi.json`; the service ships `openapi.yaml`. Plus an exit-status bug in the pip-install loop failed the step after a *successful* install | [#21 — FIN-311](https://github.com/MauricioPereaA/keystone/pull/21) auto-detect `openapi.yaml\|yml\|json`; fix the loop |
 | 4 | The conventions gate ran `devex standards-check` on a `pull_request` checkout — a detached, shallow **merge ref** where the branch is `HEAD` and the commit is a synthetic merge. The gate was red for every consumer, regardless of the change | [#22 — FIN-312](https://github.com/MauricioPereaA/keystone/pull/22) + [#23 — FIN-313](https://github.com/MauricioPereaA/keystone/pull/23) resolve the branch from `GITHUB_HEAD_REF`; skip the unreachable commit |
 | 5 | The API-contract step ran `schemathesis run`, which needs a **live URL** — unsatisfiable in pre-deploy small-tests (and never, in-process, for a serverless Lambda) | [#24 — FIN-314](https://github.com/MauricioPereaA/keystone/pull/24) split: validate the schema pre-deploy (server-less), fuzz the deployed URL post-deploy |
+| 6 | The deploy job hard-coded **pnpm** (versionless `pnpm/action-setup`, `pnpm install --frozen-lockfile`, `pnpm exec cdk`) — Transactionify is an `npm` CDK app with no `pnpm-lock.yaml`, so it failed three ways before deploying anything | [#26 — FIN-316](https://github.com/MauricioPereaA/keystone/pull/26) deploy job is package-manager-agnostic: detect the lockfile (pnpm/yarn/npm), fall back to `npm install`, deploy via `npx cdk` |
 
-Two of these (4 and 5) were found only by running the pipeline **live** — they pass
-the framework's own unit tests but fail on a real GitHub `pull_request` checkout. That
+Three of these (4, 5 and 6) were found only by running the pipeline **live** — they pass
+the framework's own unit tests but fail on a real GitHub checkout / deploy. That
 is the difference between "tested" and "dogfooded".
 
 ## 3. Shift-left in action: the catch→fix loop
@@ -107,7 +109,73 @@ The catch and the fix are two runs on the same PR
 ([transactionify#1](https://github.com/MauricioPereaA/transactionify/pull/1)) — the
 audit trail of shift-left value.
 
-## 4. What this demonstrates against the challenge criteria
+## 4. Act 3 — the deploy stage on real AWS (OIDC)
+
+The PR pipeline's `deploy-sandbox` job was then run **for real** against a live AWS
+account (us-west-2), under a strict cost cap — AWS Budgets alarms at $5/$25/$50, and
+every stack `cdk destroy`'d immediately after verification.
+
+### The sixth gap: the deploy job assumed pnpm
+
+The generated deploy job set up pnpm (`pnpm/action-setup@v4` with **no version**), ran
+`pnpm install --frozen-lockfile`, and deployed with `pnpm exec cdk`. Transactionify is
+an **npm** CDK app with no `pnpm-lock.yaml`, so the job failed before creating a single
+resource. Fixed package-manager-agnostically in [FIN-316 / #26](https://github.com/MauricioPereaA/keystone/pull/26)
+(gap 6 above), then the workflow was regenerated.
+
+### Green deploy via OIDC — no static keys
+
+The pipeline deployed Transactionify to real AWS through a least-privilege GitHub
+**OIDC** role (trust scoped to `repo:MauricioPereaA/transactionify:*`; permission limited
+to assuming the CDK bootstrap roles). No `AWS_ACCESS_KEY_ID` exists anywhere
+([run evidence](https://github.com/MauricioPereaA/transactionify/actions/runs/27309574910)):
+
+```
+small-tests        ✓ conventions · unit+PBT (128) · OpenAPI schema
+deploy-sandbox
+  ✓ Install infra dependencies          (npm ci — lockfile detected)
+  ✓ Configure AWS credentials (OIDC)    (assumed the deploy role)
+  ✓ Emit DORA telemetry (deployment.started)
+  ✓ Deploy to sandbox (CDK)             (npx cdk deploy)
+  ✓ Emit DORA telemetry (deployment.succeeded)
+```
+
+The framework-emitted `DoraEvent` from that deploy, verbatim:
+
+```json
+{"schemaVersion":"1.0.0","event":"deployment.succeeded","workId":"TX-1",
+ "actor":"MauricioPereaA","repo":"MauricioPereaA/transactionify","env":"sandbox",
+ "commitSha":"c7942a9...","timestamp":"2026-06-10T22:11:22Z","runId":"27309574910"}
+```
+
+The live resources were verified (DynamoDB + HTTP API v2 + Lambda authorizer + six
+Python 3.9 Lambdas; the API answered `401` from the authorizer, proving the full
+request→authorizer path), then `cdk destroy`'d to zero. The cross-language DORA loop
+was closed on real AWS with the reference `GoldenService` construct: the framework's
+`buildEvent`/`serializeEvent` wrote a `DoraEvent` to a CloudWatch log group, and
+`devex dora` (Python) read it back and computed the four metrics — **TS emits, Python
+reports, one contract.**
+
+### Promotion to the trunk surfaced two more edges
+
+Merging the adoption PR showed the golden path assumes the trunk is `main`:
+
+- **`main` vs `master`.** The integration pipeline triggers on `push: main`, but the
+  service's trunk was `master`, so promotion never fired. Quick fix on the consumer:
+  rename `master → main`. The durable platform answer is to make the trunk branch a
+  generator option (tracked, not yet built).
+- **Merge commits fail the conventions gate.** On `push: main`, `devex standards-check`
+  correctly **skips** the protected branch but still validates the **HEAD commit** —
+  GitHub's `Merge pull request #1 …` merge commit, not a conventional commit — so the
+  gate goes red on the trunk and (correctly) skips the deploy. The convention is
+  **squash-merge** (whose commit is the PR title, which *does* match); the durable fix
+  is to skip the commit check on a protected-branch push, exactly as FIN-313 skips it
+  on a `pull_request` checkout.
+
+These are honest open edges — the kind a real adoption always finds, and cheap to
+surface precisely because the pipeline was run for real.
+
+## 5. What this demonstrates against the challenge criteria
 
 - **Convention over configuration** — a real service got the full golden path from
   `devex adopt`, not bespoke CI.
@@ -121,16 +189,16 @@ audit trail of shift-left value.
   (schema validation pre-deploy), and the DORA event is framework-emitted, not
   per-service.
 
-## Next: the deploy stage
+## What's still open
 
-The PR pipeline's `deploy-sandbox` job is the remaining chapter and needs a real AWS
-account:
+The loop from "a service adopts the golden path" to "its deploys feed the shared DORA +
+audit stream on real infrastructure" is closed end to end on sandbox. The remaining
+edges, each a small next PR:
 
-- the generated deploy job pins a `pnpm` version (a gap the live run exposed — the
-  next platform fix),
-- GitHub **OIDC** role (no static keys) + **AWS Budgets** alarms before any deploy,
-- `cdk deploy` → a real **`DoraEvent`** → `devex dora` → **post-deploy schemathesis
-  fuzzing** (the other half of FIN-314, against the deployed URL) → `cdk destroy`.
-
-That closes the loop from "a service adopts the golden path" to "its deploys feed the
-shared DORA + audit stream on real infrastructure."
+- **Trunk branch as a generator option** (the `main`/`master` edge above).
+- **Skip the commit check on a protected-branch push** (the merge-commit edge above —
+  the FIN-313 fix, applied to the trunk).
+- **Post-deploy schemathesis fuzzing** against the deployed URL (the other half of
+  FIN-314), and **shipping the `DoraEvent` to the collector** from CI (today the deploy
+  job emits it to the run summary; the `GoldenService` construct provisions the
+  CloudWatch sink it should be written to).
