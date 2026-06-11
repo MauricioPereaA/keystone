@@ -14,6 +14,6 @@ make lint         # ruff + tsc --noEmit
 devex standards-check
 ```
 
-Before any feature work, read [`.claude/rules/prd-driven-development.md`](.claude/rules/prd-driven-development.md)
-(PRD/ADR gate) and [`.claude/rules/commit-and-pr.md`](.claude/rules/commit-and-pr.md)
+Before any feature work, read [`docs/engineering-rules/prd-driven-development.md`](docs/engineering-rules/prd-driven-development.md)
+(PRD/ADR gate) and [`docs/engineering-rules/commit-and-pr.md`](docs/engineering-rules/commit-and-pr.md)
 (Work ID, conventional commits, two-reviewer rule).

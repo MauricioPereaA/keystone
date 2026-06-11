@@ -6,7 +6,7 @@
  * the telemetry sink (a log group with ENFORCED retention) where generated deploy
  * workflows ship the DoraEvent stream — so DORA/audit data has a home.
  *
- * Cost guardrails are structural, not optional (see .claude/rules/aws-cdk.md):
+ * Cost guardrails are structural, not optional (see docs/engineering-rules/aws-cdk.md):
  *   - every log group has explicit retention (never the infinite default),
  *   - RemovalPolicy.DESTROY so `cdk destroy` actually cleans PoC stacks,
  *   - standard tags (project/service/env) for cost attribution + teardown,
@@ -133,7 +133,7 @@ export class GoldenService extends Construct {
       defaultIntegration: new apigateway.LambdaIntegration(this.handler),
     });
 
-    // Cost attribution + clean teardown (.claude/rules/aws-cdk.md §9).
+    // Cost attribution + clean teardown (docs/engineering-rules/aws-cdk.md §9).
     Tags.of(this).add("project", "keystone");
     Tags.of(this).add("service", props.serviceName);
     Tags.of(this).add("env", props.env);

@@ -53,3 +53,7 @@ Thumbs.db
 .scratch/
 *.local
 *.private
+
+# ── Local AI-assistant tooling (on-disk only, not part of the deliverable) ──
+/CLAUDE.md
+/.claude/

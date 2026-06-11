@@ -2,7 +2,7 @@
 
 Every user-facing feature or behavior change is described by a PRD before code lands. This folder is the canonical record of *what we're building and why*. Architectural choices live separately in [`docs/architecture/adr/`](../architecture/adr/).
 
-> **Working with an AI agent?** The agent's contract is in [`.claude/rules/prd-driven-development.md`](../../.claude/rules/prd-driven-development.md) and the scaffolding tool is the [`/prd` skill](../../.claude/skills/prd/SKILL.md). The agent will block on missing PRDs before writing feature code — by design.
+> The PRD gate is [`docs/engineering-rules/prd-driven-development.md`](../../docs/engineering-rules/prd-driven-development.md): feature code is blocked until a PRD scaffolded from [`00-template.md`](00-template.md) is approved — by design.
 
 ---
 
@@ -12,7 +12,7 @@ Every user-facing feature or behavior change is described by a PRD before code l
 |---|---|---|---|
 | [01](./01-shared-engineering-ecosystem.md) | Shared Engineering Ecosystem (Keystone) | Approved | The PoC scope: CLI + framework + comparable DORA, all installable from Git |
 
-> Add one row per PRD when it's created. Keep it sorted by number. The `/prd` skill updates this table automatically.
+> Add one row per PRD when it's created. Keep it sorted by number.
 
 ---
 
@@ -52,7 +52,7 @@ When unsure, write the PRD. The cost of a 15-minute interview is much less than 
                       │ Yes             │ No
                       ▼                 ▼
         ┌─────────────────────┐   ┌──────────────────────┐
-        │ Reference it.       │   │ Run /prd skill —     │
+        │ Reference it.       │   │ Draft from the        │
         │ If scope expanded,  │   │ structured interview │
         │ update the PRD      │   │ + scaffold from      │
         │ + Change log.       │   │ template.            │
@@ -97,14 +97,14 @@ The agent runs this gate **before writing code** for any feature work:
 3. If no PRD covers it: invoke `/prd`, run the interview, scaffold the doc, surface it to the user for approval.
 4. Only after a PRD exists does the agent proceed to implementation.
 
-The full contract is in [`.claude/rules/prd-driven-development.md`](../../.claude/rules/prd-driven-development.md).
+The full contract is in [`docs/engineering-rules/prd-driven-development.md`](../../docs/engineering-rules/prd-driven-development.md).
 
 ---
 
 ## Numbering
 
 - Two-digit, zero-padded: `00`, `01`, `02`, … through `99`.
-- The skill picks the next number by listing this folder.
+- Pick the next number by listing this folder.
 - Branches landing in parallel can collide — first to merge wins; the second renumbers.
 - Numbers are stable once merged. Renumbering a merged PRD is banned (history would lie).
 
@@ -135,12 +135,12 @@ The full contract is in [`.claude/rules/prd-driven-development.md`](../../.claud
 | **Numbering** | `NN-` (2 digit) | `NNNN-` (4 digit) |
 | **Triggered by** | Feature work | Architectural fork-in-the-road |
 
-**Most PRDs reference existing ADRs.** **Some PRDs spawn a new ADR** when the feature requires a real technical choice. The `/prd` skill detects this and offers to scaffold both.
+**Most PRDs reference existing ADRs.** **Some PRDs spawn a new ADR** when the feature requires a real technical choice. When that happens, scaffold both together (ADR template: `docs/architecture/adr/0000-template.md`).
 
 ---
 
 ## Related rules
 
-- [`.claude/rules/prd-driven-development.md`](../../.claude/rules/prd-driven-development.md) — agent contract (mandatory).
-- [`.claude/rules/commit-and-pr.md`](../../.claude/rules/commit-and-pr.md) — commit + PR conventions.
-- [`.claude/rules/boundaries.md`](../../.claude/rules/boundaries.md) — repo-wide hard rules.
+- [`docs/engineering-rules/prd-driven-development.md`](../../docs/engineering-rules/prd-driven-development.md) — agent contract (mandatory).
+- [`docs/engineering-rules/commit-and-pr.md`](../../docs/engineering-rules/commit-and-pr.md) — commit + PR conventions.
+- [`docs/engineering-rules/boundaries.md`](../../docs/engineering-rules/boundaries.md) — repo-wide hard rules.

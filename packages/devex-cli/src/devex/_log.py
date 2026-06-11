@@ -3,7 +3,7 @@
 Emits ``<LEVEL> <event.name> key=value …`` to STDERR. stdout is reserved for
 user-facing Rich output and machine-readable command output (e.g. ``devex workid``);
 diagnostics never pollute it. Event names are dotted/lowercase and context is
-key=value, per .claude/rules/logging-discipline.md §B. Every caught error logs
+key=value, per docs/engineering-rules/logging-discipline.md §B. Every caught error logs
 through this instead of being swallowed (boundaries.md §7, error-handling.md §9).
 """
 

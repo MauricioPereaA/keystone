@@ -1,6 +1,6 @@
 # Dependabot — version updates for the Keystone monorepo.
 # Grouped minor+patch (low noise); majors individual; security updates always land.
-# Conventional-commit prefixes per .claude/rules/commit-and-pr.md.
+# Conventional-commit prefixes per docs/engineering-rules/commit-and-pr.md.
 
 version: 2
 

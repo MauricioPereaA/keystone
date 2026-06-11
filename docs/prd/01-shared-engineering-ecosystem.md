@@ -53,7 +53,7 @@ This PRD covers the PoC: prove the architectural integration, distribution strat
 
 - Testing: CLI ≥ 80% (pytest + Hypothesis), framework via Vitest + clean `tsc`.
 - Security: GitHub OIDC → AWS (no static keys); no secrets/PII in logs or generated workflows; SOC 2 audit trail from the telemetry stream.
-- Cost: demoable within an AWS trial (~$100) — serverless only, retention + teardown enforced (`.claude/rules/aws-cdk.md`).
+- Cost: demoable within an AWS trial (~$100) — serverless only, retention + teardown enforced (`docs/engineering-rules/aws-cdk.md`).
 
 ## UX / API / Data notes
 

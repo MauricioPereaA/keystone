@@ -2,7 +2,7 @@
 
 **Scope:** Infrastructure (TypeScript CDK in `@keystone/platform/constructs`) + any service that deploys to AWS.
 
-**See also:** [`security.md`](security.md), [`soc2.md`](soc2.md), [`docs/runbooks/github-aws-oidc.md`](../../docs/runbooks/github-aws-oidc.md).
+**See also:** [`security.md`](security.md), [`soc2.md`](soc2.md), [`docs/runbooks/github-aws-oidc.md`](../runbooks/github-aws-oidc.md).
 
 ## When this rule applies
 

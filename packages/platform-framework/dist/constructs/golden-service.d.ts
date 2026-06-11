@@ -6,7 +6,7 @@
  * the telemetry sink (a log group with ENFORCED retention) where generated deploy
  * workflows ship the DoraEvent stream — so DORA/audit data has a home.
  *
- * Cost guardrails are structural, not optional (see .claude/rules/aws-cdk.md):
+ * Cost guardrails are structural, not optional (see docs/engineering-rules/aws-cdk.md):
  *   - every log group has explicit retention (never the infinite default),
  *   - RemovalPolicy.DESTROY so `cdk destroy` actually cleans PoC stacks,
  *   - standard tags (project/service/env) for cost attribution + teardown,

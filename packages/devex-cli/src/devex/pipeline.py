@@ -4,7 +4,7 @@ Reproduces the PR pipeline's `small-tests` stage on the workstation so failures
 surface before push, not in CI. The convention gate is run via the shared
 validators; the language test command mirrors @keystone/platform's
 `workflows/toolchains.ts` — the accepted cross-language duplication per
-.claude/rules/dry-principles.md (the `/new-language` skill updates both sides).
+docs/engineering-rules/dry-principles.md (the new-language runbook updates both sides).
 """
 
 from __future__ import annotations

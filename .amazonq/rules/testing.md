@@ -1,6 +1,6 @@
 # Testing (Amazon Q review rules)
 
-Distilled from `.claude/rules/testing-conventions.md`. Flag any PR that:
+Distilled from `docs/engineering-rules/testing-conventions.md`. Flag any PR that:
 
 - **Adds/changes a validator without a property-based test.** The CLI validators
   must have Hypothesis PBT — assert a property over generated inputs, not just a few

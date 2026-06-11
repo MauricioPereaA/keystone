@@ -55,7 +55,7 @@ flowchart LR
 
 ## 3. Scalability — the platform team is not in the critical path
 
-- **Self-serve extension.** Languages live behind one typed interface; the `/new-language` recipe makes adding a stack a contracts-only contribution — no platform-team gatekeeping for the common case.
+- **Self-serve extension.** Languages live behind one typed interface; the `new-language` runbook makes adding a stack a contracts-only contribution — no platform-team gatekeeping for the common case.
 - **Inner-source, proven not promised.** One real adoption surfaced **six platform gaps** — install, toolchain, contract-testing, CI-checkout, and deploy-job defects — each fixed as a small reviewed PR to the platform (FIN-308, 309, 311, 312/313, 314, 316). Three were findable **only** by running the pipeline live. The next team inherits every fix.
 - **Distribution that scales without a registry.** Pinned Git tags are the release artifact. The framework ships a **prebuilt `dist/`** (ADR-0004) — no build-on-install, no package-manager allowlists (pnpm ≥ 11.5 blocks git-dep build scripts) — with a CI freshness gate so the committed artifact can never drift from source.
 - **The platform team's actual job:** own two contract points — `conventions.json` and the `DoraEvent` schema — curate contributions, run the release line. Everything else (workflow YAML, construct props) is consumer-readable and PR-able by any engineer; known edge cases are tracked as public, ticketed issues (§6). Not the job: writing or debugging per-team CI.

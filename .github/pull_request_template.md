@@ -8,7 +8,7 @@
     • Target < 400 LOC of meaningful diff. Larger means it should have been split.
     • Two approvals + green CI before merge; squash-merge keeps `main` one-PR-one-commit.
 
-  Full conventions: .claude/rules/commit-and-pr.md
+  Full conventions: docs/engineering-rules/commit-and-pr.md
 -->
 
 ## Work ID
@@ -25,7 +25,7 @@ Closes FIN-
 
 <!--
   Feature/behavior changes require a PRD before code lands; architectural choices require an ADR.
-    - Rule:  .claude/rules/prd-driven-development.md
+    - Rule:  docs/engineering-rules/prd-driven-development.md
   Paste PRD-NN and/or ADR-NNNN. For non-feature PRs (bug fix, refactor, dep bump, CI/docs), write "N/A — <reason>".
 -->
 
@@ -47,7 +47,7 @@ PRD- / ADR-
 
 ## AWS / cost impact
 
-<!-- Per .claude/rules/aws-cdk.md. Backend/infra PRs only. -->
+<!-- Per docs/engineering-rules/aws-cdk.md. Backend/infra PRs only. -->
 
 - [ ] N/A — no infra change, OR
 - [ ] New CDK resources have log retention + `project=keystone` tags, no NAT gateways, and `cdk destroy` verified

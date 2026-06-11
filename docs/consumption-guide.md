@@ -112,7 +112,7 @@ You don't fork the platform to customize — you compose it:
 - **New convention:** propose a change to `conventions/conventions.json` via a
   PR to Keystone (see the [Contribution Guide](contributing.md)). It then applies
   to every team at once.
-- **New language (Go / Clojure / …):** see the `/new-language` skill and the
+- **New language (Go / Clojure / …):** see the [`new-language` runbook](runbooks/new-language.md) and the
   Contribution Guide — you add a test-toolchain mapping, not a new metric.
 
 ---

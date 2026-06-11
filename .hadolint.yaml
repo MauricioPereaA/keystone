@@ -1,7 +1,0 @@
-# Hadolint config — see https://github.com/hadolint/hadolint
-# Ignored rules:
-#   DL3008  Pin apt-get package versions. Debian package versions churn faster
-#           than is practical to track here; we rely on the upstream base image
-#           for reproducibility. Revisit if we hit a deps-drift incident.
-ignored:
-  - DL3008

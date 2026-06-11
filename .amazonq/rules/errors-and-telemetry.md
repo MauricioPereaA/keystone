@@ -1,6 +1,6 @@
 # Errors, logging & telemetry (Amazon Q review rules)
 
-Distilled from `.claude/rules/error-handling.md`, `logging-discipline.md`,
+Distilled from `docs/engineering-rules/error-handling.md`, `logging-discipline.md`,
 `audit-logging.md`. Flag any PR that:
 
 - **Swallows errors silently.** No bare `except: pass` / empty `catch`. Every caught

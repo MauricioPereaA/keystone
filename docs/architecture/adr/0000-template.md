@@ -14,7 +14,6 @@ linear: []               # [TICKET-NN]
 
 <!--
 This is the canonical ADR template. Copy it as docs/architecture/adr/NNNN-<slug>.md.
-The /prd skill scaffolds from this file when a PRD spawns an architectural choice.
 
 Status lifecycle:  Proposed → Accepted → (later) Superseded
 Once Accepted, an ADR is NEVER edited. To change the decision, write a new ADR

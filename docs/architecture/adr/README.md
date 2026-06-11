@@ -2,7 +2,7 @@
 
 Every non-obvious technical fork is captured as an ADR before — or alongside — the code that implements it. This folder is the canonical record of *which path we picked and why*. Product scope lives separately in [`docs/prd/`](../../prd/).
 
-> **Working with an AI agent?** The [`/prd` skill](../../../.claude/skills/prd/SKILL.md) scaffolds an ADR alongside a PRD when the feature involves a non-obvious technical choice. The ADR template is [`0000-template.md`](./0000-template.md).
+> The ADR template is [`0000-template.md`](./0000-template.md). When a PRD involves a non-obvious technical choice, scaffold the ADR alongside it and cross-link the two.
 
 ---
 
@@ -15,7 +15,7 @@ Every non-obvious technical fork is captured as an ADR before — or alongside �
 | [0003](./0003-git-governance-and-branch-protection.md) | Git governance — unified PR-title convention + branch-protection ruleset | Accepted | One Work-ID-anchored title rule (CLI-validated); ruleset-as-code for 2 reviewers |
 | [0004](./0004-ship-prebuilt-dist-for-the-framework.md) | Ship a prebuilt dist for the Git-distributed framework | Accepted | Why `dist/` is committed (zero-config install, no build-on-install) + a CI freshness gate |
 
-> Add one row per ADR when it's created. Keep it sorted by number. The `/prd` skill updates this table when it scaffolds a paired ADR.
+> Add one row per ADR when it's created. Keep it sorted by number.
 
 ---
 
@@ -26,7 +26,7 @@ Every non-obvious technical fork is captured as an ADR before — or alongside �
 - ✅ New data store, queue, search engine, or other backbone dependency.
 - ✅ New auth model (e.g. switching from JWT to session cookies, adding SSO).
 - ✅ New deployment target or runtime.
-- ✅ Deviation from an existing rule in [`.claude/rules/`](../../../.claude/rules/).
+- ✅ Deviation from an existing rule in [`docs/engineering-rules/`](../../../docs/engineering-rules/).
 - ✅ Choice between two reasonable libraries / patterns where the tradeoff isn't obvious.
 - ✅ A choice that, if reversed in six months, would require a non-trivial migration.
 
@@ -89,11 +89,11 @@ When in doubt: write the ADR. Three short sections; the value is the *alternativ
 2. **Fill all sections.** *Especially* "Alternatives considered" — at least two, each with a reason for rejection. An ADR without alternatives is just a description.
 3. **Open a PR for the ADR.** Can land in the same PR as implementation (small decisions) or as a doc-only PR (larger decisions needing independent review).
 4. **Get the ADR to `Accepted`.** A reviewer signs off on Context + Decision + Consequences.
-5. **Reference the ADR.** Cross-link from the originating PRD (`related_adrs: [ADR-NNNN]`) and from any rule in `.claude/rules/` that the decision affects.
+5. **Reference the ADR.** Cross-link from the originating PRD (`related_adrs: [ADR-NNNN]`) and from any rule in `docs/engineering-rules/` that the decision affects.
 
-### Step-by-step for agents
+### When a PRD spawns an ADR
 
-When the [`/prd` skill](../../../.claude/skills/prd/SKILL.md) detects a non-obvious technical fork during the PRD interview, it asks: *"Does this introduce a new technical choice with multiple reasonable answers?"* If yes, it scaffolds the ADR alongside the PRD and cross-links them.
+While drafting a PRD, ask: *"does this introduce a new technical choice with multiple reasonable answers?"* If yes, scaffold the ADR alongside the PRD from the template and cross-link them (`related_adrs:` in the PRD, `related_prds:` in the ADR).
 
 ---
 
@@ -133,6 +133,6 @@ When the [`/prd` skill](../../../.claude/skills/prd/SKILL.md) detects a non-obvi
 
 ## Related rules
 
-- [`.claude/rules/prd-driven-development.md`](../../../.claude/rules/prd-driven-development.md) — agent contract.
-- [`.claude/rules/boundaries.md`](../../../.claude/rules/boundaries.md) — the constraints an ADR can override only with explicit written waiver.
-- [`.claude/rules/commit-and-pr.md`](../../../.claude/rules/commit-and-pr.md) — commit + PR conventions.
+- [`docs/engineering-rules/prd-driven-development.md`](../../../docs/engineering-rules/prd-driven-development.md) — agent contract.
+- [`docs/engineering-rules/boundaries.md`](../../../docs/engineering-rules/boundaries.md) — the constraints an ADR can override only with explicit written waiver.
+- [`docs/engineering-rules/commit-and-pr.md`](../../../docs/engineering-rules/commit-and-pr.md) — commit + PR conventions.

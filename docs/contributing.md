@@ -11,13 +11,13 @@ This guide covers the four most common contributions and the review process.
 
 ## Ground rules (apply to every contribution)
 
-1. **PRD/ADR gate** (`.claude/rules/prd-driven-development.md`): a new feature or
+1. **PRD/ADR gate** (`docs/engineering-rules/prd-driven-development.md`): a new feature or
    behavior change needs an approved PRD first; a non-obvious technical fork needs
    an ADR. Bug fixes, refactors, and docs are exempt.
 2. **Work ID** in the branch, commit, and PR title (`conventions.json`).
 3. **Small PRs** (< 400 LOC of meaningful diff), conventional-commit title.
 4. **Two approvals + green CI**, squash-merge, no direct push to `main`
-   (`.claude/rules/no-direct-push-to-main.md`). At least one approval must come
+   (`docs/engineering-rules/no-direct-push-to-main.md`). At least one approval must come
    from a platform-team maintainer when you touch a **contract** (see below).
 5. **Tests required** for behavior changes; the fix's regression test must fail on
    the unfixed code.
@@ -39,7 +39,7 @@ This guide covers the four most common contributions and the review process.
 **You're editing:** the language switch in the workflow generator + (optionally)
 the construct's runtime mapping.
 
-- Run the **`/new-language` skill** — it walks the exact files and checklist.
+- Follow the **[`new-language` runbook](runbooks/new-language.md)** — it walks the exact files and checklist.
 - The key principle: you add a **test-toolchain mapping** (how "small-tests" runs
   for that language), **not** a new metric. DORA stays comparable because the
   telemetry event is unchanged (ADR-0002).
@@ -51,7 +51,7 @@ the construct's runtime mapping.
 **You're editing:** `packages/platform-framework/src/{constructs,workflows}/`.
 
 - Keep the public surface minimal — export through the relevant subpath barrel.
-- New AWS resources MUST follow `.claude/rules/aws-cdk.md` (log retention, tags,
+- New AWS resources MUST follow `docs/engineering-rules/aws-cdk.md` (log retention, tags,
   no NAT) and pass `cdk-nag` (`AwsSolutionsChecks`) in CI.
 - Add CDK assertion tests (`Template.fromStack`).
 
@@ -78,9 +78,8 @@ make lint                 # ruff + tsc --noEmit
 devex standards-check     # branch + commit conventions
 ```
 
-The `/preflight` skill runs this gate; `/open-pr` runs `/audit-check` (scans for
-hard-coded conventions, missing telemetry steps, static AWS keys, drift) and marks
-the PR Draft if it finds gaps.
+CI re-runs this exact gate; the PR template's checklist covers the audit items
+(hard-coded conventions, missing telemetry steps, static AWS keys, drift).
 
 ---
 
@@ -115,7 +114,7 @@ framework's public exports. A **breaking** change to any of them requires an RFC
 2. **5-business-day comment window**, announced to all consuming teams. Silence is
    consent; objections are resolved in the issue, not in DMs.
 3. The accepted ADR records the outcome; the implementing PR links both. Per
-   [`releasing.md`](../.claude/rules/releasing.md), a breaking telemetry change is
+   [`releasing.md`](../docs/engineering-rules/releasing.md), a breaking telemetry change is
    a coordinated **major** bump.
 
 Additive changes (new command, new generator option, new event field within the
@@ -138,6 +137,6 @@ gives consumer teams a standing voice in the contracts they live under.
 - Removal ships only in a major, behind the RFC above.
 - Consumers pin Git tags (`cli-vX.Y.Z` / `framework-vX.Y.Z`), so nothing changes
   under a team silently — upgrading is always an explicit tag bump, and a
-  published tag is never reused ([`releasing.md`](../.claude/rules/releasing.md)).
+  published tag is never reused ([`releasing.md`](../docs/engineering-rules/releasing.md)).
 - A `conventions.json` change that alters validation ripples as at least a CLI
   minor; when both packages must move in lockstep, they release together.

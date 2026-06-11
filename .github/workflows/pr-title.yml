@@ -2,7 +2,7 @@ name: PR Title
 
 # Validates the PR title against conventions.json via the devex CLI — the SAME
 # single source of truth the developer validates locally (no regex is hard-coded
-# here; see .claude/rules/boundaries.md §1 and magic-values.md). Squash-merge
+# here; see docs/engineering-rules/boundaries.md §1 and magic-values.md). Squash-merge
 # uses the PR title as the commit subject on main, so it must be a valid
 # conventional-commit carrying a Work ID, exactly like a commit.
 
@@ -25,7 +25,7 @@ jobs:
       - name: Validate PR title against conventions.json
         # The PR title is untrusted input — pass it through an env var, never
         # interpolated into the shell command, to avoid script injection
-        # (.claude/rules/security.md §8).
+        # (docs/engineering-rules/security.md §8).
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: uv run --project packages/devex-cli devex check-pr-title "$PR_TITLE"

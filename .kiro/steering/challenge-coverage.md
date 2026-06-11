@@ -42,8 +42,8 @@ Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/ke
 |---|---|---|
 | Architecture diagram (CLI · framework · service repos · GH Actions · AWS · telemetry) | `keystone-strategy.{md,pdf}` §Architecture (ASCII flow) | ✅ rendered (2-page PDF) |
 | Homologation strategy (how 10+ teams adopt consistently) | `keystone-strategy.pdf` §Homologation; `docs/consumption-guide.md`, ADR-0001 | ✅ in the PDF |
-| Scalability strategy (platform team not a bottleneck) | `keystone-strategy.pdf` §Scalability; `docs/contributing.md`, `/new-language` skill | ✅ in the PDF |
-| Shift-left strategy (validation closer to devs) | `keystone-strategy.pdf` §Shift-left; `devex standards-check` + hooks + `.claude/rules/` | ✅ in the PDF |
+| Scalability strategy (platform team not a bottleneck) | `keystone-strategy.pdf` §Scalability; `docs/contributing.md`, `new-language` runbook | ✅ in the PDF |
+| Shift-left strategy (validation closer to devs) | `keystone-strategy.pdf` §Shift-left; `devex standards-check` + hooks + `docs/engineering-rules/` | ✅ in the PDF |
 
 ## 3. Component A — Developer CLI
 
@@ -54,7 +54,7 @@ Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/ke
 | Automate conventions / bootstrap (`init` / `adopt`) | `cli.py` `init` + `adopt`, `scaffold.py` (shell-out to framework generator + fallback) | ✅ |
 | Branch / commit / Work ID validation | `validators.py` (+ tests) | ✅ |
 | Local pipeline simulation | `cli.py` `pipeline run --local` + `pipeline.py` | ✅ |
-| Distribution: uv · git install · versioned · easy upgrade | `pyproject.toml`, `.claude/rules/releasing.md`, README | ✅ clean-room `uv tool install git+…#subdirectory=` verified; bundled conventions load |
+| Distribution: uv · git install · versioned · easy upgrade | `pyproject.toml`, `docs/engineering-rules/releasing.md`, README | ✅ clean-room `uv tool install git+…#subdirectory=` verified; bundled conventions load |
 
 ## 4. Component B — Workflow Framework
 
@@ -72,7 +72,7 @@ Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/ke
 |---|---|---|
 | Universal Work ID (branch / commit / PR) | `conventions/conventions.json`, `validators.py` | ✅ |
 | Standardized PR template | `.github/pull_request_template.md` | ✅ |
-| Two-reviewer approval rule | `conventions.json` `pullRequest.minReviewers`, `commit-and-pr.md`, ruleset-as-code (`.github/rulesets/main-protection.json` + `scripts/apply-branch-protection.sh` + `make protect-main`), ADR-0003 | 🟡 (doc + ruleset-as-code ✅; server-side enforcement pending public/Pro — GitHub gates it on private free) |
+| Two-reviewer approval rule | `conventions.json` `pullRequest.minReviewers`, `commit-and-pr.md`, ruleset-as-code (`.github/rulesets/main-protection.json` + `make protect-main`), ADR-0003 | ✅ ruleset **active** on `main` (2 approvals + required checks + no force-push; admin bypass recorded) |
 | Convention enforcement via automation | `pr-title.yml` (→ `devex check-pr-title`) + `ci.yml` (CLI/Framework tests + conventions drift) + local hooks + generated PR workflow | ✅ |
 
 ## 6. CI/CD Framework Design
@@ -98,7 +98,7 @@ Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/ke
 |---|---|---|
 | A — Local dev env (Docker Compose / LocalStack / Testcontainers) | `docker-compose.yml` (LocalStack) + `make localstack-up/down` + `docs/runbooks/local-dev-env.md` | ✅ |
 | B — Pre-push validation (git hooks / pre-commit) | `.pre-commit-config.yaml` ✅ + `devex hooks install` (native pre-commit/pre-push) | ✅ |
-| C — AI-assisted PR reviews (Amazon Q) | `.amazonq/rules/*.md` (mapped from `.claude/rules/`) + `docs/runbooks/amazon-q-reviews.md` | ✅ installed + reviewing PRs against `.amazonq/rules` (verified on PR #17) |
+| C — AI-assisted PR reviews (Amazon Q) | `.amazonq/rules/*.md` (mapped from `docs/engineering-rules/`) + `docs/runbooks/amazon-q-reviews.md` | ✅ installed + reviewing PRs against `.amazonq/rules` (verified on PR #17) |
 | D — Integration Pipeline PoC (working impl) | `…/workflows/generateIntegrationPipeline` (+ snapshot/structure tests) | 🟡 generator ✅; triggered live on `main` (surfaced the merge-commit conventions-gate edge — documented in the case study) |
 | E — Kiro evidence (steering · specs · AI context) | `.kiro/steering/`, `.kiro/specs/` | ✅ |
 
@@ -106,11 +106,11 @@ Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/ke
 
 | Criterion | How we address it | Where |
 |---|---|---|
-| Consistency (DORA comparable across 4 languages) | metric derived from one framework-emitted event, not per-language | ADR-0002, `audit-logging.md`, `/new-language` |
+| Consistency (DORA comparable across 4 languages) | metric derived from one framework-emitted event, not per-language | ADR-0002, `audit-logging.md`, `docs/runbooks/new-language.md` |
 | Convention over Configuration | golden path is the generated default; `devex init` + framework generators | `boundaries.md` §4, README |
 | Packaging Maturity | two independently versioned, Git-installable packages; clean-room install verified both ways; framework ships prebuilt `dist/` (zero-config, ADR-0004) | `releasing.md`, ADR-0004, both `README.md` |
-| Feedback Loops | shift-left: local `standards-check` + `devex hooks install` run the SAME `conventions.json` the dogfooded `ci.yml` enforces | `ci.yml`, `devex hooks`, `/preflight` |
-| Inner-Source Readiness | contribution guide + `/new-language` (self-serve, contracts-only review) | `docs/contributing.md` |
+| Feedback Loops | shift-left: local `standards-check` + `devex hooks install` run the SAME `conventions.json` the dogfooded `ci.yml` enforces | `ci.yml`, `devex hooks`, the `make` local gate |
+| Inner-Source Readiness | contribution guide + the `new-language` runbook (self-serve, contracts-only review) | `docs/contributing.md` |
 
 ## 10. Interview Readiness (post-submission)
 

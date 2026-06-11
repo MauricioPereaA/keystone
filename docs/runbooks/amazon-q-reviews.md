@@ -18,7 +18,7 @@ That's the whole setup — it's a GitHub App, not a workflow you maintain.
 
 Amazon Q reads **`.amazonq/rules/*.md`** as project rules and applies them to every
 review (and to `/q dev` code generation). Those files are distilled from the
-canonical `.claude/rules/`, so Q reviews PRs against the exact conventions the CLI
+canonical `docs/engineering-rules/`, so Q reviews PRs against the exact conventions the CLI
 and CI enforce — the single source of truth, extended to AI review:
 
 | `.amazonq/rules/` file | Covers |
@@ -28,7 +28,7 @@ and CI enforce — the single source of truth, extended to AI review:
 | `errors-and-telemetry.md` | errors visible / structured logging, the single `DoraEvent` source, SOC 2 |
 | `testing.md` | PBT for validators, telemetry-step-in-every-deploy-job, CDK assertions, coverage floor |
 
-Keep these in step with `.claude/rules/` when a rule changes (a future improvement
+Keep these in step with `docs/engineering-rules/` when a rule changes (a future improvement
 is to generate them from the canonical set).
 
 ## Usage

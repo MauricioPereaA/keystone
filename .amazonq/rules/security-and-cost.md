@@ -1,6 +1,6 @@
 # Security & AWS cost (Amazon Q review rules)
 
-Distilled from `.claude/rules/security.md` + `aws-cdk.md`. Flag any PR that:
+Distilled from `docs/engineering-rules/security.md` + `aws-cdk.md`. Flag any PR that:
 
 - **Uses static AWS keys.** Generated/CI deploy workflows must authenticate via
   GitHub OIDC (`aws-actions/configure-aws-credentials` + a role ARN from a repo
