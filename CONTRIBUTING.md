@@ -26,7 +26,7 @@ devex standards-check
 ## Ground rules
 
 - **Work ID** in branch, commit, and PR title (`conventions.json` — the CLI and CI
-  enforce the same rules).
+  enforce the same rules). No tracker access? Open an issue; a maintainer assigns one.
 - **PRD/ADR gate** before feature work
   ([`docs/engineering-rules/prd-driven-development.md`](docs/engineering-rules/prd-driven-development.md));
   bug fixes, refactors, and docs are exempt.
