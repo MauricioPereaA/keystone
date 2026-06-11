@@ -36,12 +36,14 @@ The **core + bonuses are built, tested, and dogfooded**:
 
 ## 2. Deliverable — ADR PDF (≤ 2 pages)
 
+Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/keystone-strategy.pdf) (2 pages) from [`keystone-strategy.md`](../../docs/architecture/keystone-strategy.md) via `make adr-pdf`.
+
 | Section | Where | Status |
 |---|---|---|
-| Architecture diagram (CLI · framework · service repos · GH Actions · AWS · telemetry) | content in ADR-0001/0002 + the strategy doc diagram | 🟡 content ready; render PDF at project close |
-| Homologation strategy (how 10+ teams adopt consistently) | `docs/consumption-guide.md`, ADR-0001 | ✅ written; fold into PDF |
-| Scalability strategy (platform team not a bottleneck) | `docs/contributing.md` (inner-source), `/new-language` skill | ✅ written; fold into PDF |
-| Shift-left strategy (validation closer to devs) | `devex standards-check` + hooks + `.claude/rules/` | ✅ written; fold into PDF |
+| Architecture diagram (CLI · framework · service repos · GH Actions · AWS · telemetry) | `keystone-strategy.{md,pdf}` §Architecture (ASCII flow) | ✅ rendered (2-page PDF) |
+| Homologation strategy (how 10+ teams adopt consistently) | `keystone-strategy.pdf` §Homologation; `docs/consumption-guide.md`, ADR-0001 | ✅ in the PDF |
+| Scalability strategy (platform team not a bottleneck) | `keystone-strategy.pdf` §Scalability; `docs/contributing.md`, `/new-language` skill | ✅ in the PDF |
+| Shift-left strategy (validation closer to devs) | `keystone-strategy.pdf` §Shift-left; `devex standards-check` + hooks + `.claude/rules/` | ✅ in the PDF |
 
 ## 3. Component A — Developer CLI
 

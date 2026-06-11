@@ -69,7 +69,9 @@ cd packages/platform-framework && pnpm install && pnpm test && pnpm lint
 
 ## Documentation
 
-- **Architecture & rationale:** [`docs/architecture/adr/`](docs/architecture/adr/) (the 2-page ADR PDF is rendered from these at project close).
+- **Architecture & strategy (2-page ADR PDF):** [`docs/architecture/keystone-strategy.pdf`](docs/architecture/keystone-strategy.pdf) — the single-page-pair overview (diagram + homologation / scalability / shift-left strategies). Source: [`keystone-strategy.md`](docs/architecture/keystone-strategy.md); regenerate with `make adr-pdf`.
+- **Architecture Decision Records:** [`docs/architecture/adr/`](docs/architecture/adr/) (0001 monorepo · 0002 DORA source · 0003 git governance · 0004 prebuilt dist).
 - **Consumption guide:** [`docs/consumption-guide.md`](docs/consumption-guide.md)
 - **Contribution (inner-source) guide:** [`docs/contributing.md`](docs/contributing.md)
+- **Integration case study (real adoption):** [`docs/case-study-transactionify.md`](docs/case-study-transactionify.md)
 - **AWS conventions & cost guardrails:** [`.claude/rules/aws-cdk.md`](.claude/rules/aws-cdk.md)
