@@ -145,3 +145,7 @@ This is a PoC with deliberate scope decisions. Statuses are honest; every 🟡/�
 - **Reviewer's guide (challenge submission):** [`SUBMISSION.md`](SUBMISSION.md)
 - **Integration case study (real adoption):** [`docs/case-study-transactionify.md`](docs/case-study-transactionify.md)
 - **AWS conventions & cost guardrails:** [`docs/engineering-rules/aws-cdk.md`](docs/engineering-rules/aws-cdk.md)
+
+## License
+
+MIT — see [LICENSE](LICENSE). Both packages (`devex-cli`, `@keystone/platform`) ship under the same license.

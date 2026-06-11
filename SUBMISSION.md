@@ -18,7 +18,7 @@ This document is the evaluation entry point: a ~30-minute reading path, the chal
 | 6 | [`packages/platform-framework/src/constructs/golden-service.ts`](packages/platform-framework/src/constructs/golden-service.ts) | The CDK construct teams inherit: log retention, tags, `RemovalPolicy`, cdk-nag clean | 3 |
 | 7 | [`docs/architecture/adr/`](docs/architecture/adr/) | Four real ADRs (0001 monorepo/self-contained CLI · 0002 single DORA source · 0003 git governance · 0004 prebuilt dist), each with alternatives considered | 4 |
 
-Deeper, if time allows: [`docs/consumption-guide.md`](docs/consumption-guide.md) (how a team installs/extends/upgrades), [`docs/contributing.md`](docs/contributing.md) (inner-source governance: RFCs, maintainers, deprecation), and [`.kiro/steering/challenge-coverage.md`](.kiro/steering/challenge-coverage.md) (the full requirement-by-requirement traceability matrix).
+Deeper, if time allows: [`docs/consumption-guide.md`](docs/consumption-guide.md) (how a team installs/extends/upgrades), [`docs/contributing.md`](docs/contributing.md) (inner-source governance: RFCs, maintainers, deprecation; the [`new-language` runbook](docs/runbooks/new-language.md) ends with a worked ~20-line example), and [`.kiro/steering/challenge-coverage.md`](.kiro/steering/challenge-coverage.md) (the full requirement-by-requirement traceability matrix).
 
 ## Challenge → deliverable map
 
