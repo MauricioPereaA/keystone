@@ -19,6 +19,43 @@ The framework owns CI/CD workflow generation, so every team emits an **identical
 
 Both consume one **single source of truth**: [`conventions/conventions.json`](conventions/conventions.json) — Work ID, branch/commit/PR patterns, pipeline shape, telemetry schema. The CLI validates locally with the exact rules the generated CI enforces. Zero drift.
 
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    subgraph mono["keystone monorepo — single source of truth"]
+        direction TB
+        conv[("<b>conventions.json</b><br/>Work ID · branch / commit / PR<br/>pipeline · telemetry schema")]
+        cli["<b>devex CLI</b> (Python · uv)<br/>standards-check · init / adopt<br/>hooks · pipeline run --local · dora"]
+        fw["<b>@keystone/platform</b> (TS · pnpm)<br/>workflow generators<br/>GoldenService CDK · DoraEvent"]
+        conv -- "bundled copy (CI drift gate)" --> cli
+        conv -- "read at generation" --> fw
+    end
+
+    subgraph svc["service repo — Python · Go · Clojure · TS"]
+        direction TB
+        yaml["generated .github/workflows<br/>(YAML — PR + Integration pipelines)"]
+        runner["<b>GitHub Actions</b><br/>runs on PR / push to main"]
+        yaml -- "executes" --> runner
+    end
+
+    subgraph aws["AWS (CDK)"]
+        direction TB
+        gold["<b>GoldenService</b><br/>Lambda · API Gateway · log retention<br/>tags · cdk-nag clean"]
+        stream[("<b>DoraEvent stream</b><br/>CloudWatch / S3")]
+    end
+
+    cli -- "init / adopt (one command)<br/>same rules locally" --> yaml
+    fw -- "generates" --> yaml
+    runner -- "GitHub OIDC deploy<br/>(no static keys)" --> gold
+    runner -- "emit DoraEvent<br/>started / succeeded / failed / rolled_back" --> stream
+    stream -. "devex dora → 4 DORA metrics + SOC 2 audit" .-> cli
+```
+
+The CLI and the framework **never import each other** — they integrate only through `conventions.json` and the documented `DoraEvent` schema. That's what lets each be versioned and Git-installed independently (ADR-0001), and what makes local validation and CI enforcement structurally incapable of drifting. Rejected alternatives, on purpose: per-team CI templates (drift by design) and conventions as policy documents (unenforced = optional).
+
+**Proven end-to-end on real AWS** — zero app-code changes, 6 latent bugs caught on the first standardized run, OIDC deploy from CI with a real `DoraEvent`: see the [Transactionify case study](docs/case-study-transactionify.md).
+
 ## Install (directly from Git — no registry needed)
 
 ```bash
@@ -69,7 +106,7 @@ cd packages/platform-framework && pnpm install && pnpm test && pnpm lint
 
 ## Documentation
 
-- **Architecture & strategy (2-page ADR PDF):** [`docs/architecture/keystone-strategy.pdf`](docs/architecture/keystone-strategy.pdf) — the single-page-pair overview (diagram + homologation / scalability / shift-left strategies). Source: [`keystone-strategy.md`](docs/architecture/keystone-strategy.md); regenerate with `make adr-pdf`.
+- **Architecture & strategy (2-page ADR PDF):** [`docs/architecture/keystone-strategy.pdf`](docs/architecture/keystone-strategy.pdf) — the two-page overview (architecture diagram + homologation / scalability / shift-left strategies + migration triggers). Source: [`keystone-strategy.md`](docs/architecture/keystone-strategy.md).
 - **Architecture Decision Records:** [`docs/architecture/adr/`](docs/architecture/adr/) (0001 monorepo · 0002 DORA source · 0003 git governance · 0004 prebuilt dist).
 - **Consumption guide:** [`docs/consumption-guide.md`](docs/consumption-guide.md)
 - **Contribution (inner-source) guide:** [`docs/contributing.md`](docs/contributing.md)

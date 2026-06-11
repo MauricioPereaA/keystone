@@ -36,7 +36,7 @@ The **core + bonuses are built, tested, and dogfooded**:
 
 ## 2. Deliverable — ADR PDF (≤ 2 pages)
 
-Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/keystone-strategy.pdf) (2 pages) from [`keystone-strategy.md`](../../docs/architecture/keystone-strategy.md) via `make adr-pdf`.
+Rendered: [`docs/architecture/keystone-strategy.pdf`](../../docs/architecture/keystone-strategy.pdf) (2 pages) from [`keystone-strategy.md`](../../docs/architecture/keystone-strategy.md) (Mermaid architecture diagram + ADR-style strategy doc; rendered locally, source committed).
 
 | Section | Where | Status |
 |---|---|---|

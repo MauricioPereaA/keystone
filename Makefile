@@ -75,10 +75,6 @@ lint-framework: ## tsc --noEmit (TypeScript)
 build: ## Build the framework (dist/) — the CLI builds at install time
 	cd $(FRAMEWORK_DIR) && pnpm build
 
-.PHONY: adr-pdf
-adr-pdf: ## Render the 2-page Architecture & Strategy ADR to PDF (needs uvx + a Chromium browser)
-	bash scripts/render-adr-pdf.sh
-
 # ───── Governance ─────────────────────────────────────────────────────
 .PHONY: protect-main
 protect-main: ## Apply the main-branch ruleset (PR + 2 reviewers); needs a public repo or GitHub Pro

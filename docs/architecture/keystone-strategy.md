@@ -1,68 +1,86 @@
 # Keystone — Architecture & Platform Strategy
 
-**A Golden Path for 10+ independent, full-cycle engineering teams.** One thesis runs through every decision below: **we don't standardize the *metric* — we standardize the *source* of the metric.** Comparability, governance, and audit become structural properties of the platform, not conventions teams are asked to remember.
+> **Status:** Final · **Author:** Mauricio Perea · **Date:** 2026-06-10 · Full decision records: `docs/architecture/adr/0001–0004`
+>
+> **Decision.** Build the Golden Path as two independently versioned, Git-installable packages — `devex` (Python CLI, `uv tool install`) and `@keystone/platform` (TypeScript framework, `pnpm add`) — wired to **one** source of truth (`conventions.json`) and **one** telemetry contract (`DoraEvent`). The packages never import each other; every convention a team must follow is defined once and structurally enforced everywhere — by the same file, at every layer.
+>
+> **Context.** 10+ independent full-cycle teams reinvent CI/CD, infrastructure, and conventions per repo. DORA metrics are not comparable across stacks (Python, Go, Clojure, TypeScript), SOC 2 evidence is reconstructed by hand, and Developer Experience — the actual product of a platform team — is fragmented. **The thesis: we don't standardize the metric; we standardize the *source* of the metric**, so comparability, governance, and audit become structural properties rather than policies teams are asked to remember.
 
-## Architecture
+## 1. Architecture
 
+```mermaid
+flowchart LR
+    subgraph mono["keystone monorepo — single source of truth"]
+        direction TB
+        conv[("<b>conventions.json</b><br/>Work ID · branch / commit / PR<br/>pipeline · telemetry schema")]
+        cli["<b>devex CLI</b> (Python · uv)<br/>standards-check · init / adopt<br/>hooks · dora"]
+        fw["<b>@keystone/platform</b> (TS · pnpm)<br/>workflow generators<br/>GoldenService CDK · DoraEvent"]
+        conv -- "bundled copy (CI drift gate)" --> cli
+        conv -- "read at generation" --> fw
+    end
+    subgraph svc["service repo — Py · Go · Clojure · TS"]
+        direction TB
+        yaml["generated .github/workflows<br/>(YAML — PR + Integration pipelines)"]
+        runner["<b>GitHub Actions</b><br/>runs on PR / push to main"]
+        yaml -- "executes" --> runner
+    end
+    subgraph aws["AWS (CDK)"]
+        direction TB
+        gold["<b>GoldenService</b><br/>Lambda · API GW · log retention<br/>tags · cdk-nag clean"]
+        stream[("<b>DoraEvent stream</b><br/>CloudWatch sink, provisioned<br/>(CI wiring queued — §6)")]
+    end
+    cli -- "init / adopt<br/>(scaffold + generate)" --> yaml
+    fw -- "generates" --> yaml
+    runner -- "GitHub OIDC deploy<br/>(no static keys)" --> gold
+    runner -- "emit DoraEvent" --> stream
+    stream -. "devex dora → 4 DORA metrics<br/>+ SOC 2 audit" .-> cli
 ```
- +-----------------------------------------------------------------------+
- |             conventions/conventions.json   (single source of truth)   |
- |     Work ID . branch/commit/PR patterns . pipeline shape . telemetry  |
- +----------------------+----------------------------+-------------------+
-              reads      |                            | reads
-            +-----------v-----------+      +----------v------------------+
-            |    devex  CLI (Py)    |      |   @keystone/platform (TS)   |
-            | validate . init/adopt |      | workflow generators . CDK   |
-            | hooks . dora . pr     |      | GoldenService . telemetry   |
-            +-----------+-----------+      +----------+------------------+
-   shift-left (local)   | scaffolds                  | generates
-                        v                            v
-        +------------------ consumer service repo (Py/Go/Clojure/TS) -----+
-        |  GitHub Actions:   PR Pipeline  -->  Integration Pipeline       |
-        |  small-tests (unit+PBT+contract) -> deploy (GitHub OIDC,        |
-        |  no static keys) -> emit DoraEvent                              |
-        +----------------------+----------------------------+------------+
-                               v                            v
-                  +-------------------------+    +--------------------------+
-                  | AWS (CDK): Lambda .     |    |   DoraEvent stream       |
-                  | API GW . DynamoDB .     |--->|   (CloudWatch / S3)      |
-                  | CloudWatch (retention)  | emit +----------+-------------+
-                  +-------------------------+               v
-                                       devex dora (4 DORA metrics) + SOC 2 audit
+
+**Key properties.** The CLI and the framework integrate **only** through `conventions.json` and the documented event schema — no code dependency in either direction, which is what keeps both Git-installable on independent SemVer lines (`cli-vX.Y.Z` / `framework-vX.Y.Z`, ADR-0001). The CLI is self-contained: it bundles a synced copy of `conventions.json` (Pydantic-validated on every load; a CI gate fails on drift). Because the **framework** — never the application — generates CI and emits telemetry, every team's pipeline and every team's events are identical by construction (ADR-0002).
+
+## 2. Homologation — adoption is engineered, not requested
+
+| Lever | Mechanism |
+|---|---|
+| **One-command adoption** | `devex init` (new service) / `devex adopt` (existing) drop in the generated PR + Integration pipelines, PR template, and `keystone.json`; git hooks are an explicit opt-in (`devex hooks install`). The reference adoption: **zero application-code changes; the first standardized CI run caught 6 latent bugs**. |
+| **One definition, two consumers** | Every convention — Work ID (`FIN-123`), branch/commit/PR patterns, pipeline stages, telemetry vocabulary — exists once in `conventions.json`. No regex is duplicated in Python or TypeScript; the CLI validates locally with **exactly** the rules the generated CI re-runs. Drift is structurally impossible, not reviewed away. |
+| **Identical pipelines by construction** | Generated `small-tests` (unit + property-based + server-less OpenAPI schema validation), OIDC deploy stages, and `DoraEvent` emission are the same shape for every language behind one `LANGUAGE_TOOLCHAINS` interface. |
+| **Governance as code** | Conventional commits anchored to a Work ID; PR-title gate; two-reviewer rule shipped as a version-controlled GitHub ruleset (ADR-0003) — change-management evidence an auditor can query. |
+
+**Rollout for 10+ existing teams:** cohort-based — start with the highest-traffic repo per language family; `devex adopt` touches no application code and is mergeable in a single PR mid-sprint. The forcing function is the DORA dashboard itself: a team that hasn't adopted has no metrics to show, and visibility is the incentive. **Anti-patterns rejected:** per-team CI templates (drift by design), conventions as policy documents (unenforced = optional), per-language metrics SDKs (defeats comparability — ADR-0002), and golden paths harder to follow than to bypass (a platform bug, not a teams problem).
+
+## 3. Scalability — the platform team is not in the critical path
+
+- **Self-serve extension.** Languages live behind one typed interface; the `/new-language` recipe makes adding a stack a contracts-only contribution — no platform-team gatekeeping for the common case.
+- **Inner-source, proven not promised.** One real adoption surfaced **six platform gaps** — install, toolchain, contract-testing, CI-checkout, and deploy-job defects — each fixed as a small reviewed PR to the platform (FIN-308, 309, 311, 312/313, 314, 316). Three were findable **only** by running the pipeline live. The next team inherits every fix.
+- **Distribution that scales without a registry.** Pinned Git tags are the release artifact. The framework ships a **prebuilt `dist/`** (ADR-0004) — no build-on-install, no package-manager allowlists (pnpm ≥ 11.5 blocks git-dep build scripts) — with a CI freshness gate so the committed artifact can never drift from source.
+- **The platform team's actual job:** own two contract points — `conventions.json` and the `DoraEvent` schema — curate contributions, run the release line. Everything else (workflow YAML, construct props) is consumer-readable and PR-able by any engineer; known edge cases are tracked as public, ticketed issues (§6). Not the job: writing or debugging per-team CI.
+
+## 4. Shift-left — the same rules at four layers
+
+1. **Workstation:** `devex standards-check` + opt-in git hooks fail in seconds, with the exact rules CI enforces — and the failure tells the developer how to fix it:
+```text
+$ devex standards-check
+✓ branch OK
+✗ commit invalid: 'update stuff'. Expected e.g. 'feat(api): FIN-123 add payment validation'
 ```
+2. **Pre-push:** `devex pipeline run --local` simulates the pipeline before anything leaves the machine.
+3. **PR pipeline (generated):** re-runs the conventions gate, unit + property-based tests, and validates the OpenAPI schema **server-less** — contract checking is split: schema pre-deploy, fuzz the deployed URL post-deploy (FIN-314). *Pre-deploy live-fuzzing is an anti-pattern: the endpoint doesn't exist yet.*
+4. **Deploy:** GitHub **OIDC** (no static keys, least-privilege role scoped to the repo) → sandbox → staging → production promotion, each stage emitting telemetry.
 
-The CLI (developer-side) and the framework (platform-side) **never import each other**; they integrate only through `conventions.json` and the documented `DoraEvent` schema. That is what lets each be versioned and Git-installed independently, and what guarantees local validation and CI enforcement can never drift.
+Keystone dogfoods its own gate: the monorepo's CI runs the same conventions checks and drift gates it ships to adopters.
 
-## Homologation — how 10+ teams adopt consistently
+## 5. DORA & audit — one event, two consumers
 
-- **Convention over configuration.** The golden path is the *default* that `devex init` (new service) and `devex adopt` (existing service) generate: PR template, CI workflows, hooks, and a `keystone.json`. Adoption is one command, not a migration project — if following the standard is harder than bypassing it, that is a platform bug.
-- **One source, two consumers.** Every convention (Work ID `FIN-123`, branch/commit/PR patterns, pipeline shape, telemetry schema) is defined **once** in `conventions.json`. The CLI bundles a synced copy (CI fails on drift); the framework reads it to generate workflows. No pattern is hard-coded in Python or TypeScript.
-- **Identical pipelines by construction.** Because the framework — not the application — generates CI and emits telemetry, every team's `small-tests`, deploy steps, and `DoraEvent` are identical regardless of language.
+Every generated deploy stage emits one `DoraEvent` — required fields `event, workId, actor, repo, env, commitSha, commitTime, timestamp` (the four W's, Work ID as the auditable "why"; `runId` as optional correlation). All **four DORA metrics are computable today** — deployment frequency, lead time (`timestamp − commitTime`), change-failure rate, MTTR — by `devex dora` over the stream, never instrumented per language. The same row is the SOC 2 record (CC6.1, CC7.2/7.3, CC8.1): evidence collection is a query, not an interview. **Proven on real AWS:** the framework's TypeScript `buildEvent`/`serializeEvent` produced the events, they were round-tripped through the construct-provisioned CloudWatch log group, and the Python CLI computed the four metrics from the read-back stream — TS contract, Python consumer, one schema. The case-study service deployed through OIDC from CI ([public run 27309574910](https://github.com/MauricioPereaA/transactionify/actions/runs/27309574910)), emitting its real `deployment.succeeded`; routing that CI emission into the CloudWatch sink is a queued trigger (§6).
 
-## Scalability — the platform team is not a bottleneck
+## 6. When to reconsider — explicit migration triggers
 
-- **Inner-source by design.** Rough edges become small reviewed PRs that improve the platform for the *next* team. Dogfooding the golden path on a real service (Transactionify) surfaced **six platform gaps**, each fixed as a merged inner-source PR — the platform got better *because* it was used.
-- **Self-serve extension.** Adding a language is a contracts-only change behind one interface (`LANGUAGE_TOOLCHAINS`), documented as a `/new-language` recipe — no platform-team gatekeeping for the common case.
-- **Independent, registry-less distribution.** Two SemVer-tagged packages install straight from Git (`uv tool install …#subdirectory=`, `pnpm add …#path:`). The framework ships a **prebuilt `dist/`** (ADR-0004) so installs are zero-config on any package manager.
+- **Committed `dist/` → registry publish** [ADR-0004] — the day a private registry is available; the freshness gate retires with it.
+- **Trunk branch as a generator option** — fires when trunk divergence affects a second adopting service; the case study already hit it once (trunk named `master`, integration pipeline keyed to `main`).
+- **Commit-gate on protected-branch pushes** — fires the first time a team's trunk run goes red on a GitHub merge commit; the fix is the FIN-313 skip applied to the trunk (queued, ticketed).
+- **CI events → CloudWatch sink + post-deploy fuzzing** — fires when the first team consumes `devex dora` from the shared stream rather than from run summaries; the sink is already provisioned by `GoldenService`.
 
-## Shift-left — validation closer to the developer
+---
 
-- **Same rules, three places.** `devex standards-check` and the installed git hooks run the **exact** `conventions.json` rules the generated CI re-runs — a failure surfaces on the workstation, not on a PR an hour later.
-- **Fail fast, act locally.** `devex pipeline run --local` simulates the pipeline before a push; the API-contract check validates the OpenAPI schema **pre-deploy** (server-less) and fuzzes the **deployed** URL post-deploy — a split that only emerged from a real adoption.
-
-## Distribution, security & cost
-
-GitHub **OIDC** for AWS — there is no long-lived key to leak. CDK constructs are **cdk-nag-clean** with enforced CloudWatch log retention, `project=keystone` tags, and `RemovalPolicy.DESTROY`; AWS Budgets alarms guard the trial account. The whole loop — generate → deploy → `DoraEvent` → `devex dora` — was run end-to-end on **real AWS** through OIDC, then torn down.
-
-## Key decisions (full ADRs in `docs/architecture/adr/`)
-
-| ADR | Decision | Why it matters |
-|---|---|---|
-| 0001 | Monorepo + **self-contained** CLI (bundles conventions) | One clone shows the wiring; Git installs resolve reliably |
-| 0002 | **Single `DoraEvent`** emitted by generated CI | DORA comparability + SOC 2 audit are structural, not per-team |
-| 0003 | Git governance — PR-title convention + ruleset-as-code | Two-reviewer change management is code-reviewable evidence |
-| 0004 | Ship **prebuilt `dist/`** (no build-on-install) | Zero-config, package-manager-agnostic installs (registry-less) |
-
-## Validated, not just designed
-
-Transactionify (a real, independent Python + CDK service) adopted the golden path with zero application-code changes. Its first standardized CI run **caught six latent bugs** (red → green on one PR), the adoption drove **six platform fix PRs**, and it **deployed to a real AWS sandbox via OIDC**, emitting a real `DoraEvent` that `devex dora` read back to compute the four metrics. See `docs/case-study-transactionify.md`.
+> **Appendix — measured impact (Transactionify case study).** *Before:* no CI ever ran its tests · suite drifted from its own code · conventions unenforced · deploys manual. *After (zero app-code changes):* 6 latent bugs caught on the first standardized run, red → green on one PR · 6 platform gaps fixed upstream · real AWS sandbox deploy from CI via least-privilege OIDC, verbatim `DoraEvent` captured · four DORA metrics computed from the real stream · teardown verified to zero resources under a $5 budget alarm. Full narrative: `docs/case-study-transactionify.md`.
