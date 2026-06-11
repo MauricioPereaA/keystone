@@ -39,7 +39,7 @@ This guide covers the four most common contributions and the review process.
 **You're editing:** the language switch in the workflow generator + (optionally)
 the construct's runtime mapping.
 
-- Follow the **[`new-language` runbook](runbooks/new-language.md)** — it walks the exact files and checklist.
+- Follow the **[`new-language` runbook](runbooks/new-language.md)** — it walks the exact files and checklist, and ends with a **complete worked example (adding Rust, ~20-line PR)**.
 - The key principle: you add a **test-toolchain mapping** (how "small-tests" runs
   for that language), **not** a new metric. DORA stays comparable because the
   telemetry event is unchanged (ADR-0002).
