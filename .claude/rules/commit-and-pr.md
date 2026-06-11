@@ -58,7 +58,7 @@ You're about to `git commit` or open a PR.
    - [ ] Migrations reviewed and reversible
    ```
 5. **CI must be green** before requesting review.
-6. **One approval** required to merge. Reviewer looks for: correctness, tests, adherence to rules in `.claude/rules/`.
+6. **Two approvals** required to merge (`conventions.json` `pullRequest.minReviewers`, enforced by the main-protection ruleset — ADR-0003). Reviewers look for: correctness, tests, adherence to rules in `.claude/rules/`.
 7. **Squash-merge**: one PR = one commit on `main`.
 8. **Delete the branch** after merge.
 

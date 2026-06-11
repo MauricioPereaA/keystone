@@ -1,10 +1,14 @@
 # Keystone — Architecture & Platform Strategy
 
-> **Status:** Final · **Author:** Mauricio Perea · **Date:** 2026-06-10 · Full decision records: `docs/architecture/adr/0001–0004`
->
-> **Decision.** Build the Golden Path as two independently versioned, Git-installable packages — `devex` (Python CLI, `uv tool install`) and `@keystone/platform` (TypeScript framework, `pnpm add`) — wired to **one** source of truth (`conventions.json`) and **one** telemetry contract (`DoraEvent`). The packages never import each other; every convention a team must follow is defined once and structurally enforced everywhere — by the same file, at every layer.
->
-> **Context.** 10+ independent full-cycle teams reinvent CI/CD, infrastructure, and conventions per repo. DORA metrics are not comparable across stacks (Python, Go, Clojure, TypeScript), SOC 2 evidence is reconstructed by hand, and Developer Experience — the actual product of a platform team — is fragmented. **The thesis: we don't standardize the metric; we standardize the *source* of the metric**, so comparability, governance, and audit become structural properties rather than policies teams are asked to remember.
+*We don't standardize the metric — we standardize the **source** of the metric.*
+
+**Mauricio Perea** · mauriceperea93@gmail.com · 2026-06-10 · Status: Final · decision records: ADR-0001…0004
+
+**2 Git-installable packages · 117 tests (86 py + 31 ts) · 4 ADRs · live OIDC deploy on real AWS · 6 inner-source fixes from one real adoption**
+
+**The problem.** 10+ independent full-cycle teams reinvent CI/CD, infrastructure, and conventions per repo. DORA metrics are not comparable across stacks (Python, Go, Clojure, TypeScript), SOC 2 evidence is reconstructed by hand, and Developer Experience — the actual product of a platform team — is fragmented.
+
+**The decision.** Build the Golden Path as two independently versioned, Git-installable packages — `devex` (Python CLI, `uv tool install`) and `@keystone/platform` (TypeScript framework, `pnpm add`) — wired to **one** source of truth (`conventions.json`) and **one** telemetry contract (`DoraEvent`). The packages never import each other; every convention a team must follow is defined once and structurally enforced everywhere — by the same file, at every layer. Comparability, governance, and audit become structural properties, not policies teams are asked to remember.
 
 ## 1. Architecture
 

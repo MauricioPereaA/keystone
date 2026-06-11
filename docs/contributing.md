@@ -89,9 +89,55 @@ the PR Draft if it finds gaps.
 | Change type | Reviewers | Extra gate |
 |---|---|---|
 | App-only (no contract touched) | 2 engineers | CI green |
-| Workflow generator / new language | 2, incl. 1 platform maintainer | snapshot tests + telemetry step present |
-| New CDK construct | 2, incl. 1 platform maintainer | `cdk-nag` clean + CDK assertion tests |
-| `conventions.json` / telemetry schema | 2, incl. 1 platform maintainer | drift check + ADR if breaking |
+| Workflow generator / new language | 2, incl. 1 maintainer | snapshot tests + telemetry step present |
+| New CDK construct | 2, incl. 1 maintainer | `cdk-nag` clean + CDK assertion tests |
+| `conventions.json` / telemetry schema | 2, incl. 1 maintainer | drift check + RFC/ADR if breaking |
 
 The goal: a team can land an improvement in hours, not by filing a platform-team
 ticket and waiting. The platform team reviews contracts, not every line.
+
+---
+
+## Governance: RFCs, maintainers, deprecation
+
+Inner-source only scales if the *process* is as explicit as the code. Three rules
+keep the platform team out of the critical path without losing control of the
+contracts.
+
+### RFC process — for breaking contract changes only
+
+The platform has exactly four contract surfaces: the `conventions.json` schema,
+the telemetry `schemaVersion` (major), the CLI command/exit-code contract, and the
+framework's public exports. A **breaking** change to any of them requires an RFC:
+
+1. Open an issue titled `RFC: <change>` describing the break, who it affects, and
+   the migration path. Draft the ADR alongside it (`docs/architecture/adr/0000-template.md`).
+2. **5-business-day comment window**, announced to all consuming teams. Silence is
+   consent; objections are resolved in the issue, not in DMs.
+3. The accepted ADR records the outcome; the implementing PR links both. Per
+   [`releasing.md`](../.claude/rules/releasing.md), a breaking telemetry change is
+   a coordinated **major** bump.
+
+Additive changes (new command, new generator option, new event field within the
+major) skip the RFC — the review table above is enough. Most contributions never
+need one; that's the point.
+
+### Maintainer model — rotating, not gatekept
+
+Two maintainers at any time: **one platform engineer + one IC from a consuming
+team**, the consumer seat rotating quarterly. Contract-touching PRs need one
+maintainer approval (see table); everything else needs any two engineers. The
+rotation is what keeps "platform review" from meaning "platform bottleneck" — and
+gives consumer teams a standing voice in the contracts they live under.
+
+### Deprecation & upgrade policy
+
+- A deprecated surface keeps working for **2 minor releases or 6 months,
+  whichever is longer**, with a warning at the point of use and a CHANGELOG entry
+  naming the replacement.
+- Removal ships only in a major, behind the RFC above.
+- Consumers pin Git tags (`cli-vX.Y.Z` / `framework-vX.Y.Z`), so nothing changes
+  under a team silently — upgrading is always an explicit tag bump, and a
+  published tag is never reused ([`releasing.md`](../.claude/rules/releasing.md)).
+- A `conventions.json` change that alters validation ripples as at least a CLI
+  minor; when both packages must move in lockstep, they release together.
