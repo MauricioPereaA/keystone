@@ -22,6 +22,7 @@ You're cutting a release of the CLI or the framework, or changing how either is 
 5. **Changelog per package.** Keep `packages/*/CHANGELOG.md`. Conventional-commit history makes this derivable (consider `changesets` for the framework / `release-please` for tag+changelog automation — a future improvement, not required for the PoC).
 6. **Conventions changes ripple.** A `conventions.json` change that alters validation is at least a CLI minor (bundled copy changes) and may force a framework minor (generated workflows change). Release them together when they must stay in lockstep.
 7. **Never retag.** A published tag is immutable (consumers pin it). To fix a bad release, cut the next patch.
+8. **The framework ships a prebuilt `dist/` — it is committed, not built on install** (ADR-0004). There is no registry to host a built tarball, so the compiled output is the distribution unit: a consumer's `pnpm add` copies it directly (no build step, no toolchain, no pnpm `allowBuilds` allowlist). Rebuild and commit `dist/` in the same change that touches `src/`; CI fails if the committed `dist/` is stale. A release tag therefore carries its own build output and installs with zero config.
 
 ## Why
 

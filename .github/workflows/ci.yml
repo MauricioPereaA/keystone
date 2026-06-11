@@ -54,6 +54,16 @@ jobs:
         run: pnpm --dir packages/platform-framework test
       - name: Build (dist + .d.ts)
         run: pnpm --dir packages/platform-framework build
+      - name: Verify committed dist is in sync with src (ADR-0004)
+        # The framework ships a prebuilt dist/ (Git-distributed, no registry). A
+        # fresh build must produce no diff — otherwise a consumer would install
+        # stale compiled output. Keep the committed artifact authoritative.
+        run: |
+          if [ -n "$(git status --porcelain -- packages/platform-framework/dist)" ]; then
+            echo "::error::packages/platform-framework/dist is stale. Run 'pnpm --dir packages/platform-framework build' and commit the result (ADR-0004 ships prebuilt dist)."
+            git --no-pager diff -- packages/platform-framework/dist | head -100
+            exit 1
+          fi
 
   conventions:
     name: Conventions in sync

@@ -33,6 +33,12 @@ pnpm add "github:MauricioPereaA/keystone#path:/packages/platform-framework"
 pnpm add "MauricioPereaA/keystone#framework-v0.1.0&path:/packages/platform-framework"
 ```
 
+The framework ships a **prebuilt `dist/`** (ADR-0004), so the install is zero-config:
+no build step runs on your machine, and you do **not** need a pnpm `allowBuilds`
+allowlist — even on pnpm ≥ 11.5, which blocks build scripts for Git dependencies by
+default. npm and yarn install it the same way. (Pinning a `framework-vX.Y.Z` tag is
+still recommended; the tag carries its own built output.)
+
 ---
 
 ## 2. Configure (adopt the golden path)
