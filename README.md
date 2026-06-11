@@ -56,7 +56,16 @@ flowchart LR
 
 The CLI and the framework **never import each other** — they integrate only through `conventions.json` and the documented `DoraEvent` schema. That's what lets each be versioned and Git-installed independently (ADR-0001), and what makes local validation and CI enforcement structurally incapable of drifting. Rejected alternatives, on purpose: per-team CI templates (drift by design) and conventions as policy documents (unenforced = optional).
 
-**Proven end-to-end on real AWS** — zero app-code changes, 6 latent bugs caught on the first standardized run, OIDC deploy from CI with a real `DoraEvent`: see the [Transactionify case study](docs/case-study-transactionify.md).
+## The proof: a real service adopted it
+
+The integration case study is **[Transactionify](https://github.com/MauricioPereaA/transactionify)** — a payments API (Python Lambdas + API Gateway v2 + DynamoDB, with its own CDK app) that was **not** built for Keystone. It lives in its own public repo, and its CI history is the evidence:
+
+- `devex adopt` brought in the golden path with **zero application-code changes** ([adoption PR](https://github.com/MauricioPereaA/transactionify/pull/1)).
+- The first standardized CI run **caught 6 latent bugs** that the service's own — never-running — test suite had silently accumulated: [red (6 caught)](https://github.com/MauricioPereaA/transactionify/actions/runs/27232032733) → [green](https://github.com/MauricioPereaA/transactionify/actions/runs/27235803827), on the same PR.
+- The generated pipeline **deployed it to a real AWS sandbox through GitHub OIDC** (no static keys) and emitted a real `DoraEvent`: [run 27309574910](https://github.com/MauricioPereaA/transactionify/actions/runs/27309574910).
+- Every rough edge the adoption surfaced flowed back as **six reviewed platform fixes** (FIN-308 · 309 · 311 · 312/313 · 314 · 316) — the inner-source loop, demonstrated rather than promised.
+
+Full narrative: [`docs/case-study-transactionify.md`](docs/case-study-transactionify.md).
 
 ## Install (directly from Git — no registry needed)
 
