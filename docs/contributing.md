@@ -14,7 +14,9 @@ This guide covers the four most common contributions and the review process.
 1. **PRD/ADR gate** (`docs/engineering-rules/prd-driven-development.md`): a new feature or
    behavior change needs an approved PRD first; a non-obvious technical fork needs
    an ADR. Bug fixes, refactors, and docs are exempt.
-2. **Work ID** in the branch, commit, and PR title (`conventions.json`).
+2. **Work ID** in the branch, commit, and PR title (`conventions.json`). No access
+   to the tracker? Open a GitHub issue describing the change — a maintainer assigns
+   the Work ID that anchors your branch/commits/PR.
 3. **Small PRs** (< 400 LOC of meaningful diff), conventional-commit title.
 4. **Two approvals + green CI**, squash-merge, no direct push to `main`
    (`docs/engineering-rules/no-direct-push-to-main.md`). At least one approval must come
@@ -76,6 +78,10 @@ make check-conventions    # CI gate
 make test                 # pytest + Hypothesis (CLI), Vitest (framework)
 make lint                 # ruff + tsc --noEmit
 devex standards-check     # branch + commit conventions
+make build                # touched framework src/? rebuild AND COMMIT dist/ —
+                          # the shipped artifact (ADR-0004); CI fails on a stale dist
+pnpm --dir packages/platform-framework test -- -u   # changed generator output on
+                          # purpose? refresh snapshots, then REVIEW the snapshot diff
 ```
 
 CI re-runs this exact gate; the PR template's checklist covers the audit items
