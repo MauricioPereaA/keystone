@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Mauricio Perea", email = "mauriceperea93@gmail.com" }]
 dependencies = [
-    "typer>=0.12",          # CLI framework (Click-based, type-hint native)
+    "typer>=0.26.8",          # CLI framework (Click-based, type-hint native)
     "rich>=13.7",           # pretty terminal output for standards-check / dora report
     "pydantic>=2.7",        # validate conventions.json + telemetry events against the schema
 ]
@@ -17,10 +17,10 @@ devex = "devex.cli:app"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.2",
+    "pytest>=9.1.1",
     "pytest-cov>=5.0",
-    "hypothesis>=6.100",    # property-based testing (PBT) — mandated by the PR pipeline
-    "ruff>=0.4",
+    "hypothesis>=6.155.7",    # property-based testing (PBT) — mandated by the PR pipeline
+    "ruff>=0.15.20",
 ]
 
 # ── Packaging ────────────────────────────────────────────────────────────────
