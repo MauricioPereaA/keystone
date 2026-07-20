@@ -20,7 +20,7 @@ jobs:
     # Dependabot PRs do not carry a Work ID by design — skip the gate for them.
     if: github.actor != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - name: Validate PR title against conventions.json
         # The PR title is untrusted input — pass it through an env var, never
